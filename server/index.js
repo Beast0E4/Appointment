@@ -9,6 +9,9 @@ const http = require("http");
 const server = http.createServer(app);
 
 const userRoutes = require ('./src/routes/user.routes');
+const providerRoutes = require ('./src/routes/provider.routes');
+const availabilityRoutes = require ('./src/routes/availibility.routes')
+const serviceRoutes = require ('./src/routes/service.routes')
 
 app.use(function (req, res, next) {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -23,6 +26,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.text());
 
 app.use ('/auth', userRoutes);
+app.use ('/provider', providerRoutes);
+app.use ('/availability', availabilityRoutes);
+app.use ('/services', serviceRoutes);
 
 app.use ((err,req,res,next) => {
     const {statusCode = 500 , message = "Something went wrong"} = err;

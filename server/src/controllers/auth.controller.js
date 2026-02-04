@@ -27,7 +27,7 @@ const signin = async(req,res) => {
         })
     }
 
-    const token = jwt.sign({id : response.userData.id} , process.env.secret_key);
+    const token = jwt.sign({ id : response.userData.id, roles: response.userData.roles } , process.env.secret_key);
 
     return res.status(StatusCodes.OK).json({
         message : "Successfully Login",
