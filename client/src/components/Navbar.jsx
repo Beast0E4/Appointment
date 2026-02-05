@@ -21,8 +21,8 @@ const NavLink = ({ to, children, mobile = false, onClick }) => {
     : "text-sm font-medium transition-colors duration-200";
 
   const activeClasses = isActive
-    ? "text-indigo-600 bg-indigo-50 font-semibold"
-    : "text-slate-600 hover:text-indigo-600 hover:bg-slate-50";
+    ? "p-2 rounded-lg text-indigo-600 bg-indigo-50 font-semibold"
+    : "p-2 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-slate-50";
 
   return (
     <Link to={to} className={`${baseClasses} ${activeClasses}`} onClick={onClick}>

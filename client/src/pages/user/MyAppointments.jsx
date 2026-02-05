@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom'; // 1. Import useNavigate
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fetchMyAppointments, cancelAppointment } from '../../redux/slices/appointment.slice';
 import ConfirmationModal from '../../components/ConfirmationModal';
 
 // --- Reusable Icons ---
 const Icons = {
-  Calendar: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
-  Clock: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  User: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
-  Briefcase: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
+  Briefcase: () => <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
+  Calendar: () => <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
+  Clock: () => <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  User: () => <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
   X: () => <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>,
   Refresh: () => <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>,
   Empty: () => <svg className="w-20 h-20 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -18,7 +18,7 @@ const Icons = {
 
 function MyAppointments() {
   const dispatch = useDispatch();
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate();
   const { appointments, loading } = useSelector((state) => state.appointments);
   const [filter, setFilter] = useState('all');
 
@@ -31,13 +31,13 @@ function MyAppointments() {
 
   const getStatusStyles = (status) => {
     const styles = {
-      PENDING: 'bg-amber-100 text-amber-800 border-amber-200',
-      CONFIRMED: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-      REJECTED: 'bg-red-100 text-red-800 border-red-200',
-      CANCELLED: 'bg-slate-100 text-slate-800 border-slate-200',
-      COMPLETED: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+      PENDING: 'bg-amber-50 text-amber-700 border-amber-100 ring-amber-500/20',
+      CONFIRMED: 'bg-emerald-50 text-emerald-700 border-emerald-100 ring-emerald-500/20',
+      REJECTED: 'bg-red-50 text-red-700 border-red-100 ring-red-500/20',
+      CANCELLED: 'bg-slate-50 text-slate-600 border-slate-100 ring-slate-500/20',
+      COMPLETED: 'bg-indigo-50 text-indigo-700 border-indigo-100 ring-indigo-500/20',
     };
-    return styles[status] || 'bg-slate-100 text-slate-800';
+    return styles[status] || 'bg-slate-50 text-slate-600';
   };
 
   const openCancelModal = (appointmentId) => {
@@ -54,9 +54,7 @@ function MyAppointments() {
     }
   };
 
-  // 2. Handle Reschedule Navigation
   const handleReschedule = (appointment) => {
-    // Navigate to the booking page for this service, but passing state to indicate it's a reschedule
     navigate(`/book/${appointment.serviceId._id}`, { 
       state: { 
         rescheduleMode: true, 
@@ -121,9 +119,9 @@ function MyAppointments() {
             <button
               key={tab}
               onClick={() => setFilter(tab)}
-              className={`px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 border capitalize ${
+              className={`px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 border capitalize ${
                 filter === tab
-                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-500/30'
+                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/30'
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300'
               }`}
             >
@@ -148,7 +146,7 @@ function MyAppointments() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="flex flex-col space-y-4">
             {filteredAppointments.map((appointment, index) => {
               const displayDate = new Date(`${appointment.date}T${appointment.startTime}`);
               const displayTime = new Date(`2000-01-01T${appointment.startTime}`);
@@ -156,82 +154,105 @@ function MyAppointments() {
               return (
                 <div
                   key={appointment._id}
-                  className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300 animate-slide-up"
+                  className="bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg hover:shadow-indigo-500/5 transition-all duration-300 animate-slide-up overflow-hidden"
                   style={{ animationDelay: `${(index + 1) * 0.05}s` }}
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                  <div className="flex flex-col md:flex-row">
                     
-                    {/* Left Side: Info */}
-                    <div className="flex-1">
-                      <div className="flex items-start md:items-center space-x-4 mb-5">
-                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0 text-white shadow-md">
-                          <Icons.Briefcase />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-bold text-slate-800">
-                            {appointment.serviceId?.name}
-                          </h3>
-                          <p className="text-sm text-slate-500 flex items-center">
-                            with {appointment.providerId?.name || 'Provider'}
-                          </p>
-                        </div>
-                         {/* Mobile Status */}
-                         <div className="ml-auto lg:hidden">
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${getStatusStyles(appointment.status)}`}>
-                              {appointment.status}
-                            </span>
-                         </div>
+                    {/* LEFT: Date Badge Section */}
+                    <div className="hidden md:flex flex-col items-center justify-center p-6 bg-slate-50 w-32 border-r border-slate-100 flex-shrink-0">
+                      <span className="text-sm font-bold text-indigo-500 uppercase tracking-wider mb-1">
+                        {format(displayDate, 'MMM')}
+                      </span>
+                      <span className="text-3xl font-extrabold text-slate-800">
+                        {format(displayDate, 'dd')}
+                      </span>
+                      <span className="text-xs font-medium text-slate-400 mt-1">
+                        {format(displayDate, 'yyyy')}
+                      </span>
+                    </div>
+
+                    {/* MIDDLE: Content */}
+                    <div className="flex-1 p-6 flex flex-col justify-center">
+                      {/* Mobile Date Header */}
+                      <div className="md:hidden flex items-center mb-4 pb-4 border-b border-slate-50">
+                        <span className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg text-sm font-bold mr-3">
+                          {format(displayDate, 'MMM dd')}
+                        </span>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded border ${getStatusStyles(appointment.status)}`}>
+                          {appointment.status}
+                        </span>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                        <div className="flex items-center space-x-3">
-                           <div className="text-indigo-500"><Icons.Calendar /></div>
-                           <span className="text-sm font-semibold text-slate-700">
-                            {format(displayDate, 'MMM dd, yyyy')}
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center space-x-3">
-                          <div className="text-purple-500"><Icons.Clock /></div>
-                          <span className="text-sm font-semibold text-slate-700">
-                            {format(displayTime, 'h:mm a')}
-                          </span>
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        {/* Service & Time Info */}
+                        <div className="space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
+                              <Icons.Briefcase />
+                              {appointment.serviceId?.name || 'Unknown Service'}
+                            </span>
+                            {/* Desktop Status Badge */}
+                            <span className={`hidden lg:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ring-1 ring-inset transition-colors duration-200 uppercase tracking-wide scale-90 origin-left opacity-80 ${getStatusStyles(appointment.status)}`}>
+                              {appointment.status}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-baseline space-x-2 mt-2">
+                            <h3 className="text-xl font-bold text-slate-800">
+                              {format(displayTime, 'h:mm a')}
+                            </h3>
+                            <span className="text-sm text-slate-400 font-medium">
+                              - {format(displayDate, 'EEEE')}
+                            </span>
+                          </div>
                         </div>
 
-                        <div className="hidden lg:flex items-center">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusStyles(appointment.status)}`}>
-                            {appointment.status}
-                          </span>
+                        {/* Divider on Large Screens */}
+                        <div className="hidden lg:block w-px h-12 bg-slate-100 mx-4"></div>
+
+                        {/* Provider Info */}
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold shadow-sm">
+                            {appointment.providerId?.name?.charAt(0).toUpperCase() || 'P'}
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-0.5">Provider</p>
+                            <p className="text-sm font-bold text-slate-800">
+                              {appointment.providerId?.name || 'Unknown Provider'}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Right Side: Actions (Stacked Column) */}
-                    {(appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') && (
-                      <div className="flex flex-col space-y-3 w-full lg:w-auto mt-4 lg:mt-0">
-                        {/* Cancel Button */}
-                        <button
-                          onClick={() => openCancelModal(appointment._id)}
-                          className="w-full flex items-center justify-center px-4 py-2 bg-white text-red-600 border border-red-200 rounded-xl hover:bg-red-50 hover:border-red-300 transition-all shadow-sm font-medium text-sm"
-                        >
-                          <Icons.X /> Cancel Booking
-                        </button>
+                    {/* RIGHT: Actions */}
+                    <div className="bg-slate-50 p-4 md:p-6 md:w-48 border-t md:border-t-0 md:border-l border-slate-100 flex flex-col justify-center items-center">
+                      {(appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') ? (
+                        <div className="flex flex-col space-y-2 w-full">
+                          {/* Reschedule Button (Primary) */}
+                          <button
+                            onClick={() => handleReschedule(appointment)}
+                            className="w-full flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm font-medium text-sm"
+                          >
+                            <Icons.Refresh /> Reschedule
+                          </button>
 
-                        {/* Reschedule Button */}
-                        <button
-                          onClick={() => handleReschedule(appointment)}
-                          className="w-full flex items-center justify-center px-4 py-2 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-xl hover:bg-indigo-100 hover:border-indigo-200 transition-all shadow-sm font-medium text-sm"
-                        >
-                          <Icons.Refresh /> Reschedule
-                        </button>
-                      </div>
-                    )}
-                    
-                    {['COMPLETED', 'CANCELLED', 'REJECTED'].includes(appointment.status) && (
-                       <div className="flex items-center justify-end lg:w-32">
-                          <span className="text-xs text-slate-400 font-medium italic">Archived</span>
-                       </div>
-                    )}
+                          {/* Cancel Button (Secondary/Danger) */}
+                          <button
+                            onClick={() => openCancelModal(appointment._id)}
+                            className="w-full flex items-center justify-center px-4 py-2 bg-white text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors font-medium text-sm"
+                          >
+                            <Icons.X /> Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-sm font-medium text-slate-400 italic text-center">
+                          Archived
+                        </span>
+                      )}
+                    </div>
+
                   </div>
                 </div>
               );

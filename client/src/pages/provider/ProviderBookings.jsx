@@ -5,10 +5,8 @@ import { fetchProviderBookings, updateAppointmentStatus } from '../../redux/slic
 
 // --- Reusable Icons ---
 const Icons = {
-  User: () => <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
-  Calendar: () => <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
-  Clock: () => <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  Briefcase: () => <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
+  Clock: () => <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  Briefcase: () => <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
   Check: () => <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>,
   X: () => <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>,
   Empty: () => <svg className="w-20 h-20 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
@@ -34,17 +32,16 @@ function ProviderBookings() {
 
   const getStatusStyles = (status) => {
     const styles = {
-      PENDING: 'bg-amber-100 text-amber-800 border-amber-200',
-      CONFIRMED: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-      REJECTED: 'bg-red-100 text-red-800 border-red-200',
-      CANCELLED: 'bg-slate-100 text-slate-800 border-slate-200',
-      COMPLETED: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      PENDING: 'bg-amber-50 text-amber-700 border-amber-100 ring-amber-500/20',
+      CONFIRMED: 'bg-indigo-50 text-indigo-700 border-indigo-100 ring-indigo-500/20',
+      REJECTED: 'bg-red-50 text-red-700 border-red-100 ring-red-500/20',
+      CANCELLED: 'bg-slate-50 text-slate-600 border-slate-100 ring-slate-500/20',
+      COMPLETED: 'bg-emerald-50 text-emerald-700 border-emerald-100 ring-emerald-500/20',
     };
-    return styles[status] || 'bg-slate-100 text-slate-800';
+    return styles[status] || 'bg-slate-50 text-slate-600';
   };
 
   const filteredBookings = providerBookings.filter((booking) => {
-    // 1. Construct Date object from separate fields for comparison
     const bookingDate = new Date(`${booking.date}T${booking.startTime}`);
     const now = new Date();
 
@@ -139,127 +136,112 @@ function ProviderBookings() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="flex flex-col space-y-4">
             {filteredBookings.map((booking, index) => {
-              // 2. Prepare Display Objects for Render
-              // Create date object by combining date + time to ensure correct timezone handling for display
               const displayDate = new Date(`${booking.date}T${booking.startTime}`);
-              // Create dummy date for consistent time formatting
               const displayTime = new Date(`2000-01-01T${booking.startTime}`);
 
               return (
                 <div
                   key={booking._id}
-                  className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-lg hover:shadow-indigo-500/5 transition-all duration-300 animate-slide-up"
+                  className="bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg hover:shadow-indigo-500/5 transition-all duration-300 animate-slide-up overflow-hidden"
                   style={{ animationDelay: `${(index + 1) * 0.05}s` }}
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                  <div className="flex flex-col md:flex-row">
                     
-                    {/* Left Side: Booking Info */}
-                    <div className="flex-1">
-                      <div className="flex items-start md:items-center space-x-4 mb-5">
-                        {/* Avatar */}
-                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
-                          <span className="text-white font-bold text-lg">
-                            {booking.userId?.name?.charAt(0).toUpperCase() || 'U'}
-                          </span>
-                        </div>
-                        
-                        <div>
-                          <h3 className="text-lg font-bold text-slate-800">
-                            {booking.userId?.name || 'Unknown User'}
-                          </h3>
-                          <p className="text-sm text-slate-500">
-                            {booking.userId?.email || 'No email provided'}
-                          </p>
-                        </div>
+                    {/* LEFT: Date Badge Section */}
+                    <div className="hidden md:flex flex-col items-center justify-center p-6 bg-slate-50 w-32 border-r border-slate-100 flex-shrink-0">
+                      <span className="text-sm font-bold text-indigo-500 uppercase tracking-wider mb-1">
+                        {format(displayDate, 'MMM')}
+                      </span>
+                      <span className="text-3xl font-extrabold text-slate-800">
+                        {format(displayDate, 'dd')}
+                      </span>
+                      <span className="text-xs font-medium text-slate-400 mt-1">
+                        {format(displayDate, 'yyyy')}
+                      </span>
+                    </div>
 
-                        {/* Status Badge (Mobile visible, Desktop handled in grid) */}
-                        <div className="ml-auto lg:hidden">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusStyles(booking.status)}`}>
-                              {booking.status}
-                            </span>
-                        </div>
+                    {/* MIDDLE: Content */}
+                    <div className="flex-1 p-6 flex flex-col justify-center">
+                      {/* Mobile Date Header */}
+                      <div className="md:hidden flex items-center mb-4 pb-4 border-b border-slate-50">
+                        <span className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg text-sm font-bold mr-3">
+                          {format(displayDate, 'MMM dd')}
+                        </span>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded border ${getStatusStyles(booking.status)}`}>
+                          {booking.status}
+                        </span>
                       </div>
 
-                      {/* Details Grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                        
-                        <div className="flex items-center space-x-3">
-                          <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-100"><Icons.Briefcase /></div>
-                          <div>
-                            <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Service</p>
-                            <p className="text-sm font-semibold text-slate-700">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        {/* Service & Time Info */}
+                        <div className="space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
+                              <Icons.Briefcase />
                               {booking.serviceId?.name || 'Unknown Service'}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-3">
-                          <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-100"><Icons.Calendar /></div>
-                          <div>
-                            <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Date</p>
-                            <p className="text-sm font-semibold text-slate-700">
-                              {/* Use the constructed displayDate */}
-                              {format(displayDate, 'MMM dd, yyyy')}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-3">
-                          <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-100"><Icons.Clock /></div>
-                          <div>
-                            <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Time</p>
-                            <p className="text-sm font-semibold text-slate-700">
-                              {/* Use the constructed displayTime */}
-                              {format(displayTime, 'h:mm a')}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Status (Desktop) */}
-                        <div className="hidden lg:flex flex-col justify-center">
-                          <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Status</p>
-                          <span className={`inline-flex self-start px-3 py-1 rounded-full text-xs font-bold border ${getStatusStyles(booking.status)}`}>
+                            </span>
+                            {/* FIX: Combined classNames here */}
+                            <span className={`hidden lg:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ring-1 ring-inset transition-colors duration-200 uppercase tracking-wide scale-90 origin-left opacity-80 ${getStatusStyles(booking.status)}`}>
                               {booking.status}
                             </span>
+                          </div>
+                          
+                          <div className="flex items-baseline space-x-2 mt-2">
+                            <h3 className="text-xl font-bold text-slate-800">
+                              {format(displayTime, 'h:mm a')}
+                            </h3>
+                            <span className="text-sm text-slate-400 font-medium">
+                              - {format(displayDate, 'EEEE')}
+                            </span>
+                          </div>
                         </div>
 
+                        {/* Divider on Large Screens */}
+                        <div className="hidden lg:block w-px h-12 bg-slate-100 mx-4"></div>
+
+                        {/* Client Info */}
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold shadow-sm">
+                            {booking.userId?.name?.charAt(0).toUpperCase() || 'U'}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-800">
+                              {booking.userId?.name || 'Unknown User'}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {booking.userId?.email || 'No email'}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Right Side: Actions */}
-                    <div className="flex items-center justify-end lg:w-48">
-                      {booking.status === 'PENDING' && (
-                        <div className="flex space-x-3 w-full">
+                    {/* RIGHT: Actions */}
+                    <div className="bg-slate-50 p-4 md:p-6 md:w-48 border-t md:border-t-0 md:border-l border-slate-100 flex flex-col justify-center items-center">
+                      {booking.status === 'PENDING' ? (
+                        <div className="flex flex-col space-y-2 w-full">
                           <button
                             onClick={() => handleStatusUpdate(booking._id, 'CONFIRMED')}
-                            className="flex-1 flex items-center justify-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm font-medium text-sm"
+                            className="w-full flex items-center justify-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm font-medium text-sm"
                           >
                             <Icons.Check /> Accept
                           </button>
                           <button
                             onClick={() => handleStatusUpdate(booking._id, 'REJECTED')}
-                            className="flex-1 flex items-center justify-center px-4 py-2 bg-white text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors font-medium text-sm"
+                            className="w-full flex items-center justify-center px-4 py-2 bg-white text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors font-medium text-sm"
                           >
                             <Icons.X /> Reject
                           </button>
                         </div>
-                      )}
-
-                      {booking.status === 'CONFIRMED' && (
-                        <button
-                          onClick={() => handleStatusUpdate(booking._id, 'COMPLETED')}
-                          className="w-full flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm font-medium text-sm"
-                        >
-                          <Icons.Check /> Mark Complete
-                        </button>
-                      )}
-                      
-                      {['COMPLETED', 'REJECTED', 'CANCELLED'].includes(booking.status) && (
-                        <span className="text-sm text-slate-400 font-medium italic">No actions available</span>
+                      ) : (
+                        <span className="text-sm font-medium text-slate-400 italic text-center">
+                          {booking.status === 'CONFIRMED' ? 'Scheduled' : 'No actions'}
+                        </span>
                       )}
                     </div>
+
                   </div>
                 </div>
               );
