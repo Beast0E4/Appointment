@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom'; // 1. Import useNavigate
 import { format } from 'date-fns';
 import { fetchMyAppointments, cancelAppointment } from '../../redux/slices/appointment.slice';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 // --- Reusable Icons ---
 const Icons = {
@@ -10,13 +12,18 @@ const Icons = {
   User: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
   Briefcase: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
   X: () => <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>,
+  Refresh: () => <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>,
   Empty: () => <svg className="w-20 h-20 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
 };
 
 function MyAppointments() {
   const dispatch = useDispatch();
+  const navigate = useNavigate(); // Initialize navigate
   const { appointments, loading } = useSelector((state) => state.appointments);
   const [filter, setFilter] = useState('all');
+
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [appointmentToCancel, setAppointmentToCancel] = useState(null);
 
   useEffect(() => {
     dispatch(fetchMyAppointments());
@@ -33,16 +40,34 @@ function MyAppointments() {
     return styles[status] || 'bg-slate-100 text-slate-800';
   };
 
-  const handleCancel = async (appointmentId) => {
-    if (window.confirm('Are you sure you want to cancel this appointment? This action cannot be undone.')) {
-      await dispatch(cancelAppointment(appointmentId));
+  const openCancelModal = (appointmentId) => {
+    setAppointmentToCancel(appointmentId);
+    setIsCancelModalOpen(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (appointmentToCancel) {
+      await dispatch(cancelAppointment(appointmentToCancel));
       dispatch(fetchMyAppointments());
+      setIsCancelModalOpen(false);
+      setAppointmentToCancel(null);
     }
   };
 
+  // 2. Handle Reschedule Navigation
+  const handleReschedule = (appointment) => {
+    // Navigate to the booking page for this service, but passing state to indicate it's a reschedule
+    navigate(`/book/${appointment.serviceId._id}`, { 
+      state: { 
+        rescheduleMode: true, 
+        appointmentId: appointment._id,
+        currentDate: appointment.date,
+        currentSlot: appointment.startTime
+      } 
+    });
+  };
+
   const filteredAppointments = appointments.filter((apt) => {
-    // Construct a Date object from the separate date and startTime fields
-    // Format: "YYYY-MM-DD" + "T" + "HH:MM" -> "2026-02-09T09:15"
     const aptDateTime = new Date(`${apt.date}T${apt.startTime}`);
     const now = new Date();
 
@@ -55,7 +80,7 @@ function MyAppointments() {
     return true;
   });
 
-  if (loading) {
+  if (loading && !isCancelModalOpen) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
          <div className="flex flex-col items-center">
@@ -125,12 +150,7 @@ function MyAppointments() {
         ) : (
           <div className="space-y-4">
             {filteredAppointments.map((appointment, index) => {
-              // Create Date objects for display
-              // We append the time to the date to ensure correct parsing
               const displayDate = new Date(`${appointment.date}T${appointment.startTime}`);
-              
-              // We create a specific date for Time formatting to handle the HH:MM string cleanly
-              // using a dummy date prefix
               const displayTime = new Date(`2000-01-01T${appointment.startTime}`);
 
               return (
@@ -186,14 +206,23 @@ function MyAppointments() {
                       </div>
                     </div>
 
-                    {/* Right Side: Actions */}
+                    {/* Right Side: Actions (Stacked Column) */}
                     {(appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') && (
-                      <div className="flex items-center justify-end">
+                      <div className="flex flex-col space-y-3 w-full lg:w-auto mt-4 lg:mt-0">
+                        {/* Cancel Button */}
                         <button
-                          onClick={() => handleCancel(appointment._id)}
-                          className="w-full sm:w-auto flex items-center justify-center px-4 py-2.5 bg-white text-red-600 border border-red-200 rounded-xl hover:bg-red-50 hover:border-red-300 transition-all shadow-sm font-medium text-sm"
+                          onClick={() => openCancelModal(appointment._id)}
+                          className="w-full flex items-center justify-center px-4 py-2 bg-white text-red-600 border border-red-200 rounded-xl hover:bg-red-50 hover:border-red-300 transition-all shadow-sm font-medium text-sm"
                         >
                           <Icons.X /> Cancel Booking
+                        </button>
+
+                        {/* Reschedule Button */}
+                        <button
+                          onClick={() => handleReschedule(appointment)}
+                          className="w-full flex items-center justify-center px-4 py-2 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-xl hover:bg-indigo-100 hover:border-indigo-200 transition-all shadow-sm font-medium text-sm"
+                        >
+                          <Icons.Refresh /> Reschedule
                         </button>
                       </div>
                     )}
@@ -210,6 +239,18 @@ function MyAppointments() {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={handleConfirmCancel}
+        title="Cancel Appointment"
+        message="Are you sure you want to cancel this booking? This action cannot be undone."
+        confirmText="Yes, Cancel Booking"
+        isDanger={true}
+        isLoading={loading}
+      />
     </div>
   );
 }

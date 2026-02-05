@@ -87,7 +87,7 @@ export const cancelAppointment = createAsyncThunk(
   'appointments/cancel',
   async (appointmentId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.patch(`/appointments/${appointmentId}/cancel`, getAuthHeaders ());
+      const response = await axiosInstance.patch(`/appointments/${appointmentId}/cancel`, null, getAuthHeaders ());
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to cancel appointment');
@@ -97,10 +97,10 @@ export const cancelAppointment = createAsyncThunk(
 
 export const rescheduleAppointment = createAsyncThunk(
   'appointments/reschedule',
-  async ({ appointmentId, newDateTime }, { rejectWithValue }) => {
+  async ({ appointmentId, date, startTime, endTime }, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.patch(`/appointments/${appointmentId}/reschedule`, {
-        newDateTime,
+        date, startTime, endTime,
       }, getAuthHeaders ());
       return response.data;
     } catch (error) {

@@ -25,8 +25,6 @@ const getDaySlots = async (serviceId, date) => {
       isHoliday: false,
     });
 
-    console.log (dayOfWeek);
-
     if (!availability) {
       response.slots = [];
       return response;

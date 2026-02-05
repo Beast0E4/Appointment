@@ -108,6 +108,7 @@ exports.cancelAppointment = async (req, res) => {
 exports.rescheduleAppointment = async (req, res) => {
   const { appointmentId } = req.params;
 
+
   const result = await appointmentService.rescheduleAppointment(
     req.user.id,
     appointmentId,

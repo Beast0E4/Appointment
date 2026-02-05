@@ -8,6 +8,7 @@ const serviceSchema = new mongoose.Schema(
       required: true,
     },
     name: { type: String, required: true, enum: ["DENTIST", "CAR RENTAL", "SALON"] },
+    description: {type: String},
     duration: { type: Number, required: true }, // minutes
     price: { type: Number, required: true },
   },

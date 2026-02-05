@@ -114,28 +114,23 @@ const deleteService = async (userId, serviceId) => {
   const response = {};
 
   try {
-    // 1. Validate User and Role
     const user = await User.findById(userId);
     if (!user || !user.roles.includes("PROVIDER")) {
       response.error = "Unauthorized: Provider access required";
       return response;
     }
 
-    // 2. Find service
-    const service = await Service.findOne({
+    const deletedService = await Service.findOneAndDelete({
       _id: serviceId,
       providerId: userId, // Ensure ownership
     });
 
-    if (!service) {
+    if (!deletedService) {
       response.error = "Service not found or unauthorized";
       return response;
     }
 
-    // 3. Soft delete
-    await service.save();
-
-    response.message = "Service deleted successfully";
+    response.message = "Service permanently deleted";
     return response;
 
   } catch (error) {
@@ -143,6 +138,7 @@ const deleteService = async (userId, serviceId) => {
     return response;
   }
 };
+
 
 module.exports = {
   createService,

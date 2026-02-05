@@ -1,36 +1,113 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
-import { fetchAvailableSlots, bookAppointment, clearAvailableSlots } from '../../redux/slices/appointment.slice';
+import { 
+  format, 
+  addMonths, 
+  subMonths, 
+  startOfMonth, 
+  endOfMonth, 
+  startOfWeek, 
+  endOfWeek, 
+  isSameMonth, 
+  isSameDay, 
+  addDays, 
+  eachDayOfInterval, 
+  isBefore, 
+  startOfDay 
+} from 'date-fns';
+import { 
+  fetchAvailableSlots, 
+  bookAppointment, 
+  rescheduleAppointment, 
+  clearAvailableSlots 
+} from '../../redux/slices/appointment.slice';
 
 // --- Reusable Icons ---
 const Icons = {
-  ChevronLeft: () => <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>,
+  ChevronLeft: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>,
+  ChevronRight: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>,
   Calendar: () => <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
   Clock: () => <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
   Check: () => <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>,
-  Empty: () => <svg className="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+  Empty: () => <svg className="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  Exclamation: () => <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
 };
 
 function BookingPage() {
   const { serviceId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
 
-  const { user } = useSelector((state) => state.auth);
+  const rescheduleMode = location.state?.rescheduleMode || false;
+  const appointmentId = location.state?.appointmentId;
+  const currentSlotDate = location.state?.currentDate;
+
   const { availableSlots, loading } = useSelector((state) => state.appointments);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  
+  // State for selected date (for booking)
+  const [selectedDate, setSelectedDate] = useState(
+    rescheduleMode && currentSlotDate ? new Date(currentSlotDate) : new Date()
+  );
+
+  // State for the currently visible month in the calendar
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [weekDates, setWeekDates] = useState([]);
+  const [errorMessage, setErrorMessage] = useState(null);
 
-  // Generate next 7 days
-  useEffect(() => {
-    const today = new Date();
-    const dates = Array.from({ length: 7 }, (_, i) => addDays(today, i));
-    setWeekDates(dates);
-  }, []);
+  // --- Calendar Logic ---
+  const renderCalendarDays = () => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(monthStart);
+    const startDate = startOfWeek(monthStart);
+    const endDate = endOfWeek(monthEnd);
 
+    const dateFormat = "d";
+    const rows = [];
+    let days = [];
+    let day = startDate;
+    let formattedDate = "";
+
+    // Generate all days to be shown (including padding from prev/next months)
+    const calendarDays = eachDayOfInterval({ start: startDate, end: endDate });
+
+    return calendarDays.map((dayItem, idx) => {
+      // Check if day is in the past (before today)
+      const isPast = isBefore(dayItem, startOfDay(new Date()));
+      const isSelected = isSameDay(dayItem, selectedDate);
+      const isCurrentMonth = isSameMonth(dayItem, monthStart);
+      
+      return (
+        <button
+          key={dayItem.toString()}
+          disabled={isPast}
+          onClick={() => {
+            setSelectedDate(dayItem);
+            // If user clicks a grayed out day from next month, switch view
+            if (!isSameMonth(dayItem, currentMonth)) {
+              setCurrentMonth(dayItem);
+            }
+          }}
+          className={`
+            relative h-10 w-full rounded-xl flex items-center justify-center text-sm font-medium transition-all duration-200
+            ${!isCurrentMonth ? 'text-slate-300' : ''}
+            ${isPast ? 'text-slate-300 cursor-not-allowed' : 'hover:bg-indigo-50 hover:text-indigo-600'}
+            ${isSelected ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30 hover:bg-indigo-700 hover:text-white transform scale-105 z-10' : 'text-slate-700'}
+            ${isSameDay(dayItem, new Date()) && !isSelected ? 'text-indigo-600 font-bold border border-indigo-200' : ''}
+          `}
+        >
+          {format(dayItem, dateFormat)}
+        </button>
+      );
+    });
+  };
+
+  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
+
+  // --- Fetch Slots when Selected Date Changes ---
   useEffect(() => {
     if (selectedDate) {
       dispatch(
@@ -40,6 +117,7 @@ function BookingPage() {
         })
       );
       setSelectedSlot(null);
+      setErrorMessage(null);
     }
     return () => {
       dispatch(clearAvailableSlots());
@@ -48,11 +126,48 @@ function BookingPage() {
 
   const handleBooking = async () => {
     if (!selectedSlot) return;
+    setErrorMessage(null);
+
+    const dateObj = new Date(selectedSlot);
+    const dateStr = format(dateObj, 'yyyy-MM-dd');
+    const startTimeStr = format(dateObj, 'HH:mm');
+
+    const slotData = availableSlots.find(slot => slot.startTime === startTimeStr);
+    const endTimeStr = slotData ? slotData.endTime : null;
+
     try {
-      await dispatch(bookAppointment({ serviceId, dateTime: selectedSlot })).unwrap();
+      if (rescheduleMode) {
+        await dispatch(
+          rescheduleAppointment({
+            appointmentId,
+            date: dateStr,
+            startTime: startTimeStr,
+            endTime: endTimeStr,
+          })
+        ).unwrap();
+      } else {
+        await dispatch(
+          bookAppointment({
+            serviceId,
+            dateTime: selectedSlot,
+          })
+        ).unwrap();
+      }
       navigate('/my-appointments');
     } catch (error) {
-      console.error('Booking failed:', error);
+      console.error('Booking/Reschedule failed:', error);
+      const msg = error.message || error || "Action failed";
+      
+      if (msg.toLowerCase().includes("already booked") || msg.toLowerCase().includes("no longer available")) {
+        setErrorMessage("This slot was just taken. Please choose another.");
+        dispatch(fetchAvailableSlots({
+          serviceId,
+          date: format(selectedDate, 'yyyy-MM-dd'),
+        }));
+        setSelectedSlot(null);
+      } else {
+        setErrorMessage(msg);
+      }
     }
   };
 
@@ -65,25 +180,25 @@ function BookingPage() {
         <div className="absolute bottom-[10%] left-[5%] w-[40%] h-[40%] rounded-full bg-purple-500/5 blur-3xl"></div>
       </div>
 
-      <div className="max-w-5xl mx-auto relative z-10">
+      <div className="max-w-6xl mx-auto relative z-10">
         
         {/* Header */}
         <div className="mb-8 animate-slide-up">
           <button
-            onClick={() => navigate('/services')}
+            onClick={() => navigate(rescheduleMode ? '/my-appointments' : '/services')}
             className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 transition-colors font-medium text-sm group"
           >
             <div className="bg-white p-1 rounded-lg border border-slate-200 mr-2 group-hover:border-indigo-200 transition-colors">
                <Icons.ChevronLeft />
             </div>
-            Back to Services
+            {rescheduleMode ? 'Cancel Reschedule' : 'Back to Services'}
           </button>
           
           <h1 className="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight">
-            Book Appointment
+            {rescheduleMode ? 'Reschedule Appointment' : 'Book Appointment'}
           </h1>
           <p className="text-lg text-slate-500 mt-2">
-            Select a convenient date and time for your session
+            Select a date from the calendar below
           </p>
         </div>
 
@@ -92,37 +207,36 @@ function BookingPage() {
           {/* Left Column: Calendar & Slots */}
           <div className="lg:col-span-2 space-y-8">
             
-            {/* Date Selection */}
+            {/* Calendar UI */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 animate-slide-up">
-              <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
-                <span className="bg-indigo-100 text-indigo-600 p-1.5 rounded-lg mr-2"><Icons.Calendar /></span>
-                Select Date
-              </h2>
+              {/* Calendar Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-slate-800 flex items-center">
+                  <span className="bg-indigo-100 text-indigo-600 p-1.5 rounded-lg mr-2"><Icons.Calendar /></span>
+                  {format(currentMonth, "MMMM yyyy")}
+                </h2>
+                <div className="flex space-x-2">
+                  <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors">
+                    <Icons.ChevronLeft />
+                  </button>
+                  <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors">
+                    <Icons.ChevronRight />
+                  </button>
+                </div>
+              </div>
 
-              {/* Horizontal Scrollable Date Picker */}
-              <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide">
-                {weekDates.map((date) => {
-                  const isSelected = isSameDay(date, selectedDate);
-                  
-                  return (
-                    <button
-                      key={date.toISOString()}
-                      onClick={() => setSelectedDate(date)}
-                      className={`flex-shrink-0 w-20 p-3 rounded-2xl text-center transition-all duration-200 border-2 ${
-                        isSelected
-                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-500/30 transform scale-105'
-                          : 'bg-white text-slate-600 border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/50'
-                      }`}
-                    >
-                      <div className={`text-xs font-medium mb-1 uppercase ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`}>
-                        {format(date, 'EEE')}
-                      </div>
-                      <div className="text-xl font-bold">
-                        {format(date, 'd')}
-                      </div>
-                    </button>
-                  );
-                })}
+              {/* Days Header */}
+              <div className="grid grid-cols-7 mb-2">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  <div key={day} className="text-center text-xs font-semibold text-slate-400 uppercase tracking-wider py-2">
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-1">
+                {renderCalendarDays()}
               </div>
             </div>
 
@@ -130,7 +244,7 @@ function BookingPage() {
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 animate-slide-up" style={{ animationDelay: '0.1s' }}>
               <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
                 <span className="bg-purple-100 text-purple-600 p-1.5 rounded-lg mr-2"><Icons.Clock /></span>
-                Available Times
+                Available Times for {format(selectedDate, 'MMM dd')}
               </h2>
               
               {loading ? (
@@ -147,19 +261,15 @@ function BookingPage() {
                 <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/50">
                   <Icons.Empty />
                   <p className="text-slate-800 font-medium">No slots available</p>
-                  <p className="text-slate-500 text-sm">Please select another date</p>
+                  <p className="text-slate-500 text-sm">Try selecting a different date</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                   {availableSlots.map((slot) => {
-                    // --- 1. Construct Date Object ---
-                    // Combine 'selectedDate' (Date) with 'slot.startTime' ("HH:MM")
+                    // Reconstruct logic
                     const [hours, minutes] = slot.startTime.split(':').map(Number);
                     const slotDateTime = new Date(selectedDate);
                     slotDateTime.setHours(hours, minutes, 0, 0);
-
-                    // --- 2. Create ISO String for Value ---
-                    // This is what we store in state and send to backend
                     const slotIsoString = slotDateTime.toISOString();
 
                     const isSelected = selectedSlot === slotIsoString;
@@ -191,8 +301,16 @@ function BookingPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 sticky top-24 p-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
               <h2 className="text-lg font-bold text-slate-800 mb-6 pb-4 border-b border-slate-100">
-                Booking Summary
+                {rescheduleMode ? 'Reschedule Summary' : 'Booking Summary'}
               </h2>
+
+              {/* Error Message */}
+              {errorMessage && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl flex items-start animate-pulse">
+                  <Icons.Exclamation />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
 
               <div className="space-y-4 mb-8">
                 {/* Date Row */}
@@ -201,7 +319,9 @@ function BookingPage() {
                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Date</p>
+                    <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">
+                      {rescheduleMode ? 'New Date' : 'Date'}
+                    </p>
                     <p className="font-bold text-slate-800">
                       {format(selectedDate, 'MMM dd, yyyy')}
                     </p>
@@ -220,7 +340,9 @@ function BookingPage() {
                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Time</p>
+                    <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">
+                      {rescheduleMode ? 'New Time' : 'Time'}
+                    </p>
                     <p className="font-bold text-slate-800">
                       {selectedSlot ? format(new Date(selectedSlot), 'h:mm a') : 'Select a time'}
                     </p>
@@ -235,13 +357,15 @@ function BookingPage() {
               >
                 {loading ? 'Processing...' : (
                     <>
-                    Confirm Booking <Icons.Check />
+                    {rescheduleMode ? 'Confirm Reschedule' : 'Confirm Booking'} <Icons.Check />
                     </>
                 )}
               </button>
 
               <p className="text-xs text-slate-400 mt-4 text-center leading-relaxed">
-                By confirming, you agree to our cancellation policy. You can manage this booking in your dashboard.
+                {rescheduleMode 
+                  ? "Your previous appointment will be cancelled automatically once this is confirmed."
+                  : "By confirming, you agree to our cancellation policy. You can manage this booking in your dashboard."}
               </p>
             </div>
           </div>

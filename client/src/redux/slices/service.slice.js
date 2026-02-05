@@ -51,6 +51,42 @@ export const fetchAllServices = createAsyncThunk(
   }
 );
 
+export const deleteService = createAsyncThunk(
+  'services/deleteService',
+  async (serviceId, { rejectWithValue }) => {
+    try {
+      await axiosInstance.delete(
+        `/services/${serviceId}`,
+        getAuthHeaders()
+      );
+
+      return serviceId;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to delete service'
+      );
+    }
+  }
+);
+
+export const updateService = createAsyncThunk(
+  'services/updateService',
+  async ({ serviceId, data }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.patch(
+        `/services/${serviceId}`,
+        data,
+        getAuthHeaders()
+      );
+
+      return response.data; // updated service
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to update service'
+      );
+    }
+  }
+);
 
 const serviceSlice = createSlice({
   name: 'services',
@@ -73,6 +109,23 @@ const serviceSlice = createSlice({
       .addCase(fetchAllServices.fulfilled, (state, action) => {
         state.loading = false;
         state.services = action.payload;
+      })
+      .addCase(deleteService.fulfilled, (state, action) => {
+        state.loading = false;
+        state.services = state.services.filter(
+          (service) => service._id !== action.payload
+        );
+      })
+      .addCase(updateService.fulfilled, (state, action) => {
+        state.loading = false;
+
+        const index = state.services.findIndex(
+          (service) => service._id === action.payload._id
+        );
+
+        if (index !== -1) {
+          state.services[index] = action.payload;
+        }
       })
   },
 });
