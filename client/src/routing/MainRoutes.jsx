@@ -23,7 +23,7 @@ import MyAppointments from "../pages/user/MyAppointments";
 import ProviderDashboard from "../pages/provider/ProviderDashboard";
 import ManageServices from "../pages/provider/ManageServices";
 import ProviderBookings from "../pages/provider/ProviderBookings";
-import ManageAvailability from "../pages/Provider/ManageAvailability";
+import ManageAvailability from "../pages/provider/ManageAvailability";
 
 function MainRoutes() {
   return (
