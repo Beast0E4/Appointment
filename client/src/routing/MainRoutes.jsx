@@ -22,8 +22,8 @@ import MyAppointments from "../pages/user/MyAppointments";
 // Provider Pages
 import ProviderDashboard from "../pages/provider/ProviderDashboard";
 import ManageServices from "../pages/provider/ManageServices";
-import ManageAvailability from "../pages/provider/ManageAvailability";
 import ProviderBookings from "../pages/provider/ProviderBookings";
+import ManageAvailability from "../pages/Provider/ManageAvailability";
 
 function MainRoutes() {
   return (
@@ -99,7 +99,7 @@ function MainRoutes() {
         />
 
         <Route
-          path="/provider/availability"
+          path="/provider/availability/:serviceId"
           element={
             <ProtectedRoute requireProvider>
               <ManageAvailability />

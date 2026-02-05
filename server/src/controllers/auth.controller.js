@@ -11,9 +11,13 @@ const signup = async(req,res) =>  {
                 error : response.error
             })
         }
+
+        const token = jwt.sign({ id : response.userData.id, roles: response.userData.roles } , process.env.secret_key);
+
         return res.status(StatusCodes.CREATED).send({
             message : "Successfully created the account",
-            userData: response
+            userData: response.userData,
+            token
         })
 };
 

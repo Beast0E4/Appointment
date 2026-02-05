@@ -19,7 +19,7 @@ exports.createAvailability = async (req, res) => {
 };
 
 exports.getMyAvailability = async (req, res) => {
-  const result = await availabilityService.getMyAvailability(req.user.id);
+  const result = await availabilityService.getMyAvailability(req.user.id,  req.params.serviceId);
 
   if (result.error) {
     return res

@@ -7,11 +7,17 @@ const initialState = {
   error: null,
 };
 
+const getAuthHeaders = () => ({
+  headers: {
+    "x-access-token": localStorage.getItem("token"),
+  },
+});
+
 export const fetchMyAvailability = createAsyncThunk(
   'availability/fetchMyAvailability',
-  async (_, { rejectWithValue }) => {
+  async (serviceId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/availability');
+      const response = await axiosInstance.get(`/availability/${serviceId}`, getAuthHeaders ());
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch availability');
@@ -23,7 +29,7 @@ export const createAvailability = createAsyncThunk(
   'availability/createAvailability',
   async (availabilityData, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/availability', availabilityData);
+      const response = await axiosInstance.post('/availability', availabilityData, getAuthHeaders ());
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to create availability');

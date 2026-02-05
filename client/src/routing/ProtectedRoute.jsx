@@ -8,7 +8,7 @@ function ProtectedRoute({ children, requireProvider = false }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (requireProvider && user?.role !== "PROVIDER") {
+  if (requireProvider && !user?.roles?.includes("PROVIDER")) {
     return <Navigate to="/" replace />;
   }
 

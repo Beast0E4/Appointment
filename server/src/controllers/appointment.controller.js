@@ -1,11 +1,10 @@
 const { StatusCodes } = require("http-status-codes");
 const appointmentService = require("../services/appointment.service");
 
-exports.getAvailableSlots = async (req, res) => {
-  const { providerProfileId, serviceId, date } = req.query;
-
-  const result = await appointmentService.getAvailableSlots(
-    providerProfileId,
+exports.getDaySlots = async (req, res) => {
+  const { serviceId, date } = req.query;
+  
+  const result = await appointmentService.getDaySlots(
     serviceId,
     date
   );

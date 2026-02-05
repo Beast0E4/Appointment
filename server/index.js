@@ -30,7 +30,7 @@ app.use ('/auth', userRoutes);
 app.use ('/provider', providerRoutes);
 app.use ('/availability', availabilityRoutes);
 app.use ('/services', serviceRoutes);
-app.use ('/appointment', appointmentRoutes);
+app.use ('/appointments', appointmentRoutes);
 
 app.use ((err,req,res,next) => {
     const {statusCode = 500 , message = "Something went wrong"} = err;

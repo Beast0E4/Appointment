@@ -7,11 +7,17 @@ const initialState = {
   error: null,
 };
 
+const getAuthHeaders = () => ({
+  headers: {
+    "x-access-token": localStorage.getItem("token"),
+  },
+});
+
 export const fetchMyServices = createAsyncThunk(
   'services/fetchMyServices',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/services');
+      const response = await axiosInstance.get('/services', getAuthHeaders ());
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch services');
@@ -23,13 +29,28 @@ export const createService = createAsyncThunk(
   'services/createService',
   async (serviceData, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/services', serviceData);
+      const response = await axiosInstance.post('/services', serviceData, getAuthHeaders ());
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to create service');
     }
   }
 );
+
+export const fetchAllServices = createAsyncThunk(
+  'services/fetchAllServices',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get('/services/all', getAuthHeaders ());
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch all services'
+      );
+    }
+  }
+);
+
 
 const serviceSlice = createSlice({
   name: 'services',
@@ -41,32 +62,18 @@ const serviceSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch services
-      .addCase(fetchMyServices.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
       .addCase(fetchMyServices.fulfilled, (state, action) => {
         state.loading = false;
         state.services = action.payload;
-      })
-      .addCase(fetchMyServices.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Create service
-      .addCase(createService.pending, (state) => {
-        state.loading = true;
-        state.error = null;
       })
       .addCase(createService.fulfilled, (state, action) => {
         state.loading = false;
         state.services.push(action.payload);
       })
-      .addCase(createService.rejected, (state, action) => {
+      .addCase(fetchAllServices.fulfilled, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
-      });
+        state.services = action.payload;
+      })
   },
 });
 

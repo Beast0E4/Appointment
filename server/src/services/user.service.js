@@ -17,7 +17,7 @@ const createUser = async(data) => {
         }
 
         const res = await User.create (data);
-        response.user = res;
+        response.userData = res;
 
         return response;
     } catch (error) {

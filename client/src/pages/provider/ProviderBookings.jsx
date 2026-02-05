@@ -1,10 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { format } from 'date-fns';
-import {
-  fetchProviderBookings,
-  updateAppointmentStatus,
-} from '../../redux/slices/appointment.slice';
+import { fetchProviderBookings, updateAppointmentStatus } from '../../redux/slices/appointment.slice';
+
+// --- Reusable Icons ---
+const Icons = {
+  User: () => <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
+  Calendar: () => <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
+  Clock: () => <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  Briefcase: () => <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
+  Check: () => <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>,
+  X: () => <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>,
+  Empty: () => <svg className="w-20 h-20 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+};
 
 function ProviderBookings() {
   const dispatch = useDispatch();
@@ -24,69 +32,90 @@ function ProviderBookings() {
     }
   };
 
-  const getStatusBadge = (status) => {
-    const badges = {
-      PENDING: 'badge-pending',
-      CONFIRMED: 'badge-confirmed',
-      REJECTED: 'badge-rejected',
-      CANCELLED: 'badge-cancelled',
-      COMPLETED: 'badge-completed',
+  const getStatusStyles = (status) => {
+    const styles = {
+      PENDING: 'bg-amber-100 text-amber-800 border-amber-200',
+      CONFIRMED: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+      REJECTED: 'bg-red-100 text-red-800 border-red-200',
+      CANCELLED: 'bg-slate-100 text-slate-800 border-slate-200',
+      COMPLETED: 'bg-emerald-100 text-emerald-800 border-emerald-200',
     };
-    return badges[status] || 'badge';
+    return styles[status] || 'bg-slate-100 text-slate-800';
   };
 
   const filteredBookings = providerBookings.filter((booking) => {
+    // 1. Construct Date object from separate fields for comparison
+    const bookingDate = new Date(`${booking.date}T${booking.startTime}`);
+    const now = new Date();
+
     if (filter === 'pending') return booking.status === 'PENDING';
     if (filter === 'confirmed') return booking.status === 'CONFIRMED';
+    
     if (filter === 'upcoming') {
       return (
-        new Date(booking.dateTime) >= new Date() &&
+        bookingDate >= now &&
         (booking.status === 'CONFIRMED' || booking.status === 'PENDING')
       );
     }
+    
     if (filter === 'past') {
-      return new Date(booking.dateTime) < new Date() || booking.status === 'COMPLETED';
+      return bookingDate < now || booking.status === 'COMPLETED';
     }
+    
     return true;
   });
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="spinner"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+         <div className="flex flex-col items-center">
+            <svg className="animate-spin h-10 w-10 text-indigo-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p className="text-slate-500 font-medium">Loading bookings...</p>
+         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      
+       {/* Background Decor */}
+       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div className="absolute top-[10%] left-[10%] w-[40%] h-[40%] rounded-full bg-indigo-500/5 blur-3xl"></div>
+        <div className="absolute bottom-[20%] right-[5%] w-[40%] h-[40%] rounded-full bg-purple-500/5 blur-3xl"></div>
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
+        
         {/* Header */}
-        <div className="mb-8 animate-slide-up">
-          <h1 className="text-4xl font-display font-bold mb-4">
-            <span className="text-gradient">All Bookings</span>
+        <div className="mb-10 animate-slide-up">
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight">
+            Client Bookings
           </h1>
-          <p className="text-lg text-slate-600">
-            View and manage all appointment requests
+          <p className="mt-2 text-slate-500 text-lg">
+            Manage your schedule and incoming requests
           </p>
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex flex-wrap gap-3 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <div className="flex flex-wrap gap-2 mb-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
           {[
             { value: 'all', label: 'All' },
-            { value: 'pending', label: 'Pending' },
+            { value: 'pending', label: 'Pending Request' },
             { value: 'confirmed', label: 'Confirmed' },
             { value: 'upcoming', label: 'Upcoming' },
-            { value: 'past', label: 'Past' },
+            { value: 'past', label: 'History' },
           ].map((tab) => (
             <button
               key={tab.value}
               onClick={() => setFilter(tab.value)}
-              className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
+              className={`px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 border ${
                 filter === tab.value
-                  ? 'bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-lg'
-                  : 'bg-white text-slate-600 hover:bg-slate-50 border-2 border-slate-200'
+                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/30'
+                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300'
               }`}
             >
               {tab.label}
@@ -96,169 +125,145 @@ function ProviderBookings() {
 
         {/* Bookings List */}
         {filteredBookings.length === 0 ? (
-          <div className="card text-center py-12 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            <svg
-              className="w-20 h-20 mx-auto mb-4 text-slate-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              />
-            </svg>
-            <h3 className="text-xl font-semibold text-slate-700 mb-2">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <div className="flex justify-center mb-4">
+              <Icons.Empty />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">
               No Bookings Found
             </h3>
             <p className="text-slate-500">
               {filter === 'pending'
-                ? 'No pending requests at the moment'
-                : 'No bookings match your filter'}
+                ? 'Great! You are all caught up on requests.'
+                : 'No bookings match the selected filter.'}
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredBookings.map((booking, index) => (
-              <div
-                key={booking._id}
-                className="card hover:shadow-2xl transition-all duration-300 animate-slide-up"
-                style={{ animationDelay: `${(index + 2) * 0.1}s` }}
-              >
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                  {/* Booking Info */}
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-4 mb-4">
-                      <div className="w-14 h-14 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-white font-bold text-lg">
-                          {booking.userId?.name?.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-display font-semibold text-slate-800">
-                          {booking.userId?.name}
-                        </h3>
-                        <p className="text-sm text-slate-500">
-                          {booking.userId?.email}
-                        </p>
-                      </div>
-                    </div>
+            {filteredBookings.map((booking, index) => {
+              // 2. Prepare Display Objects for Render
+              // Create date object by combining date + time to ensure correct timezone handling for display
+              const displayDate = new Date(`${booking.date}T${booking.startTime}`);
+              // Create dummy date for consistent time formatting
+              const displayTime = new Date(`2000-01-01T${booking.startTime}`);
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="flex items-center space-x-2">
-                        <svg
-                          className="w-5 h-5 text-primary-500 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                          />
-                        </svg>
-                        <div>
-                          <p className="text-xs text-slate-500">Service</p>
-                          <p className="text-sm font-semibold text-slate-700">
-                            {booking.serviceId?.name}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <svg
-                          className="w-5 h-5 text-accent-500 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                        <div>
-                          <p className="text-xs text-slate-500">Date</p>
-                          <p className="text-sm font-semibold text-slate-700">
-                            {format(new Date(booking.dateTime), 'MMM dd, yyyy')}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <svg
-                          className="w-5 h-5 text-emerald-500 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <div>
-                          <p className="text-xs text-slate-500">Time</p>
-                          <p className="text-sm font-semibold text-slate-700">
-                            {format(new Date(booking.dateTime), 'h:mm a')}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <div>
-                          <p className="text-xs text-slate-500 mb-1">Status</p>
-                          <span className={`badge ${getStatusBadge(booking.status)}`}>
-                            {booking.status}
+              return (
+                <div
+                  key={booking._id}
+                  className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-lg hover:shadow-indigo-500/5 transition-all duration-300 animate-slide-up"
+                  style={{ animationDelay: `${(index + 1) * 0.05}s` }}
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    
+                    {/* Left Side: Booking Info */}
+                    <div className="flex-1">
+                      <div className="flex items-start md:items-center space-x-4 mb-5">
+                        {/* Avatar */}
+                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
+                          <span className="text-white font-bold text-lg">
+                            {booking.userId?.name?.charAt(0).toUpperCase() || 'U'}
                           </span>
                         </div>
+                        
+                        <div>
+                          <h3 className="text-lg font-bold text-slate-800">
+                            {booking.userId?.name || 'Unknown User'}
+                          </h3>
+                          <p className="text-sm text-slate-500">
+                            {booking.userId?.email || 'No email provided'}
+                          </p>
+                        </div>
+
+                        {/* Status Badge (Mobile visible, Desktop handled in grid) */}
+                        <div className="ml-auto lg:hidden">
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusStyles(booking.status)}`}>
+                              {booking.status}
+                            </span>
+                        </div>
+                      </div>
+
+                      {/* Details Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-100"><Icons.Briefcase /></div>
+                          <div>
+                            <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Service</p>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {booking.serviceId?.name || 'Unknown Service'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-100"><Icons.Calendar /></div>
+                          <div>
+                            <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Date</p>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {/* Use the constructed displayDate */}
+                              {format(displayDate, 'MMM dd, yyyy')}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-100"><Icons.Clock /></div>
+                          <div>
+                            <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Time</p>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {/* Use the constructed displayTime */}
+                              {format(displayTime, 'h:mm a')}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Status (Desktop) */}
+                        <div className="hidden lg:flex flex-col justify-center">
+                          <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Status</p>
+                          <span className={`inline-flex self-start px-3 py-1 rounded-full text-xs font-bold border ${getStatusStyles(booking.status)}`}>
+                              {booking.status}
+                            </span>
+                        </div>
+
                       </div>
                     </div>
-                  </div>
 
-                  {/* Actions */}
-                  {booking.status === 'PENDING' && (
-                    <div className="flex flex-col sm:flex-row gap-3 lg:flex-col">
-                      <button
-                        onClick={() =>
-                          handleStatusUpdate(booking._id, 'CONFIRMED')
-                        }
-                        className="btn-success whitespace-nowrap"
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleStatusUpdate(booking._id, 'REJECTED')
-                        }
-                        className="btn-danger whitespace-nowrap"
-                      >
-                        Reject
-                      </button>
+                    {/* Right Side: Actions */}
+                    <div className="flex items-center justify-end lg:w-48">
+                      {booking.status === 'PENDING' && (
+                        <div className="flex space-x-3 w-full">
+                          <button
+                            onClick={() => handleStatusUpdate(booking._id, 'CONFIRMED')}
+                            className="flex-1 flex items-center justify-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm font-medium text-sm"
+                          >
+                            <Icons.Check /> Accept
+                          </button>
+                          <button
+                            onClick={() => handleStatusUpdate(booking._id, 'REJECTED')}
+                            className="flex-1 flex items-center justify-center px-4 py-2 bg-white text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors font-medium text-sm"
+                          >
+                            <Icons.X /> Reject
+                          </button>
+                        </div>
+                      )}
+
+                      {booking.status === 'CONFIRMED' && (
+                        <button
+                          onClick={() => handleStatusUpdate(booking._id, 'COMPLETED')}
+                          className="w-full flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm font-medium text-sm"
+                        >
+                          <Icons.Check /> Mark Complete
+                        </button>
+                      )}
+                      
+                      {['COMPLETED', 'REJECTED', 'CANCELLED'].includes(booking.status) && (
+                        <span className="text-sm text-slate-400 font-medium italic">No actions available</span>
+                      )}
                     </div>
-                  )}
-
-                  {booking.status === 'CONFIRMED' && (
-                    <button
-                      onClick={() =>
-                        handleStatusUpdate(booking._id, 'COMPLETED')
-                      }
-                      className="btn-primary whitespace-nowrap"
-                    >
-                      Mark Complete
-                    </button>
-                  )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

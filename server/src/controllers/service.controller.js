@@ -2,6 +2,7 @@ const { StatusCodes } = require("http-status-codes");
 const serviceService = require("../services/service.service");
 
 exports.createService = async (req, res) => {
+  console.log (req.user.id, req.body);
   const result = await serviceService.createService(req.user.id, req.body);
 
   if (result.error) {
@@ -13,6 +14,20 @@ exports.createService = async (req, res) => {
   return res
     .status(StatusCodes.CREATED)
     .json(result.service);
+};
+
+exports.getAllServices = async (req, res) => {
+  const result = await serviceService.getAllServices();
+
+  if (result.error) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: result.error });
+  }
+
+  return res
+    .status(StatusCodes.OK)
+    .json(result.services);
 };
 
 exports.getMyServices = async (req, res) => {

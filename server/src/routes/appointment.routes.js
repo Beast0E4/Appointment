@@ -5,7 +5,7 @@ const { hasRole } = require("../middlewares/hasRole");
 const appointmentController = require ("../controllers/appointment.controller")
 const { isUserAuthenticated } = require("../middlewares/isUserAuthenticated");
 
-router.get ("/slots", isUserAuthenticated, appointmentController.getAvailableSlots);
+router.get ("/slots", isUserAuthenticated, appointmentController.getDaySlots);
 router.post ("/", isUserAuthenticated, appointmentController.bookAppointment);
 router.patch ("/:appointmentId/status", isUserAuthenticated, hasRole("PROVIDER"), appointmentController.updateAppointmentStatus);
 router.get ("/me", isUserAuthenticated, appointmentController.getMyAppointments);

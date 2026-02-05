@@ -2,15 +2,14 @@ const mongoose = require("mongoose");
 
 const serviceSchema = new mongoose.Schema(
   {
-    providerProfileId: {
+    providerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "ProviderProfile",
+      ref: "User",
       required: true,
     },
-    name: { type: String, required: true },
+    name: { type: String, required: true, enum: ["DENTIST", "CAR RENTAL", "SALON"] },
     duration: { type: Number, required: true }, // minutes
     price: { type: Number, required: true },
-    isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

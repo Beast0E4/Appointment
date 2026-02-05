@@ -1,19 +1,27 @@
 const Service = require("../models/service.model");
-const Provider = require("../models/provider.model");
+const User = require("../models/user.model"); // Import User model
 
 const createService = async (userId, data) => {
   const response = {};
 
   try {
-    const provider = await Provider.findOne({ userId });
-    if (!provider) {
-      response.error = "Provider profile not found";
+    // 1. Validate User and Role
+    const user = await User.findById(userId);
+    if (!user) {
+      response.error = "User not found";
       return response;
     }
 
+    if (!user.roles.includes("PROVIDER")) {
+      response.error = "Unauthorized: You must be a Provider to create services";
+      return response;
+    }
+
+    // 2. Create Service linked directly to the User (Provider)
     const service = await Service.create({
-      providerProfileId: provider._id,
-      name: data.name,
+      providerId: user._id, // Using the User's ID directly
+      name: data.name.toUpperCase(),
+      description: data.description,
       duration: data.duration,
       price: data.price,
     });
@@ -27,19 +35,36 @@ const createService = async (userId, data) => {
   }
 };
 
+const getAllServices = async () => {
+  const response = {};
+
+  try {
+    const services = await Service.find()
+      .populate("providerId", "name email")
+
+    response.services = services;
+    return response;
+
+  } catch (error) {
+    response.error = error.message;
+    return response;
+  }
+};
+
 const getMyServices = async (userId) => {
   const response = {};
 
   try {
-    const provider = await Provider.findOne({ userId });
-    if (!provider) {
-      response.error = "Provider profile not found";
+    // 1. Validate User and Role
+    const user = await User.findById(userId);
+    if (!user || !user.roles.includes("PROVIDER")) {
+      response.error = "Unauthorized: Provider access required";
       return response;
     }
 
+    // 2. Fetch services belonging to this user
     const services = await Service.find({
-      providerProfileId: provider._id,
-      isActive: true,
+      providerId: userId,
     });
 
     response.services = services;
@@ -55,15 +80,17 @@ const updateService = async (userId, serviceId, data) => {
   const response = {};
 
   try {
-    const provider = await Provider.findOne({ userId });
-    if (!provider) {
-      response.error = "Provider profile not found";
+    // 1. Validate User and Role
+    const user = await User.findById(userId);
+    if (!user || !user.roles.includes("PROVIDER")) {
+      response.error = "Unauthorized: Provider access required";
       return response;
     }
 
+    // 2. Find and update
     const service = await Service.findOne({
       _id: serviceId,
-      providerProfileId: provider._id,
+      providerId: userId, // Ensure ownership
     });
 
     if (!service) {
@@ -87,15 +114,17 @@ const deleteService = async (userId, serviceId) => {
   const response = {};
 
   try {
-    const provider = await Provider.findOne({ userId });
-    if (!provider) {
-      response.error = "Provider profile not found";
+    // 1. Validate User and Role
+    const user = await User.findById(userId);
+    if (!user || !user.roles.includes("PROVIDER")) {
+      response.error = "Unauthorized: Provider access required";
       return response;
     }
 
+    // 2. Find service
     const service = await Service.findOne({
       _id: serviceId,
-      ProviderId: provider._id,
+      providerId: userId, // Ensure ownership
     });
 
     if (!service) {
@@ -103,7 +132,7 @@ const deleteService = async (userId, serviceId) => {
       return response;
     }
 
-    service.isActive = false;
+    // 3. Soft delete
     await service.save();
 
     response.message = "Service deleted successfully";
@@ -120,4 +149,5 @@ module.exports = {
   getMyServices,
   updateService,
   deleteService,
+  getAllServices
 };

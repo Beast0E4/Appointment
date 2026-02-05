@@ -12,10 +12,6 @@ const providerSchema = new mongoose.Schema(
             required: true 
         },
     description: String,
-    isActive: { 
-            type: Boolean, 
-            default: true 
-        },
   },
 );
 

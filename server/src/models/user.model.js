@@ -16,7 +16,7 @@ const userSchema = new Schema({
       trim: true,
     },
     password: {
-      type: String,
+      type: String, 
       minLength: 8,
       required: true,
     },
@@ -36,5 +36,5 @@ userSchema.pre('save', function () {
     this.password = hashedPassword;
 });
 
-const User = mongoose.model('Users', userSchema);
+const User = mongoose.model('User', userSchema);
 module.exports = User;
