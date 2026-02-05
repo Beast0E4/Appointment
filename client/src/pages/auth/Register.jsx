@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { register, clearError } from '../../redux/slices/auth.slice';
+import { validateRegisterForm } from '../../utils/validation'; // 1. Import Validation Utils
 
 // --- Reusable Icons ---
 const Icons = {
@@ -15,8 +16,8 @@ const Icons = {
   Check: () => <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
 };
 
-// --- Helper Component for Inputs ---
-const InputField = ({ label, icon: Icon, type = "text", isPassword = false, ...props }) => {
+// --- Helper Component for Inputs (Updated to show field-specific errors) ---
+const InputField = ({ label, icon: Icon, type = "text", isPassword = false, error, ...props }) => {
   const [show, setShow] = useState(false);
   const inputType = isPassword ? (show ? "text" : "password") : type;
 
@@ -30,7 +31,9 @@ const InputField = ({ label, icon: Icon, type = "text", isPassword = false, ...p
         <input
           {...props}
           type={inputType}
-          className="block w-full pl-10 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 sm:text-sm"
+          className={`block w-full pl-10 pr-10 py-2.5 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 sm:text-sm ${
+            error ? 'border-red-500 focus:ring-red-200 focus:border-red-500' : 'border-slate-300'
+          }`}
         />
         {isPassword && (
           <button
@@ -42,6 +45,8 @@ const InputField = ({ label, icon: Icon, type = "text", isPassword = false, ...p
           </button>
         )}
       </div>
+      {/* 2. Display specific error message */}
+      {error && <p className="mt-1 text-xs text-red-500 ml-1">{error}</p>}
     </div>
   );
 };
@@ -49,17 +54,18 @@ const InputField = ({ label, icon: Icon, type = "text", isPassword = false, ...p
 function Register() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
+  const { loading, error: serverError, isAuthenticated } = useSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
-    roles: ['USER'], // Changed to Array, default selection
+    roles: ['USER'], 
   });
 
-  const [validationError, setValidationError] = useState('');
+  // 3. State for validation errors object
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (isAuthenticated) navigate('/');
@@ -71,40 +77,42 @@ function Register() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setValidationError('');
+    // Clear specific field error when user types
+    if (errors[e.target.name]) {
+      setErrors({ ...errors, [e.target.name]: '' });
+    }
   };
 
-  // Logic for toggling multiple roles
   const handleRoleToggle = (roleId) => {
     const currentRoles = formData.roles;
     let newRoles;
 
     if (currentRoles.includes(roleId)) {
-      // Remove if already exists
       newRoles = currentRoles.filter(role => role !== roleId);
     } else {
-      // Add if doesn't exist
       newRoles = [...currentRoles, roleId];
     }
     
     setFormData({ ...formData, roles: newRoles });
-    setValidationError('');
+    // Clear generic role error
+    if (errors.roles) {
+      setErrors({ ...errors, roles: '' });
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (formData.password !== formData.confirmPassword) {
-      setValidationError('Passwords do not match');
-      return;
-    }
-    if (formData.password.length < 6) {
-      setValidationError('Password must be at least 6 characters');
-      return;
-    }
-    // New validation: Ensure at least one role is selected
+    // 4. Run Validation Logic
+    const { isValid, errors: validationErrors } = validateRegisterForm(formData);
+
+    // Custom check for roles array (as validateRegisterForm might not handle array)
     if (formData.roles.length === 0) {
-      setValidationError('Please select at least one account type');
+        validationErrors.roles = 'Please select at least one account type';
+    }
+
+    if (!isValid || validationErrors.roles) {
+      setErrors(validationErrors);
       return;
     }
 
@@ -133,7 +141,8 @@ function Register() {
             </p>
           </div>
 
-          {(error || validationError) && (
+          {/* 5. Display Server Error Banner */}
+          {serverError && (
             <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg animate-pulse">
               <div className="flex">
                 <div className="flex-shrink-0">
@@ -143,7 +152,7 @@ function Register() {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-red-700 font-medium">
-                    {error || validationError}
+                    {serverError}
                   </p>
                 </div>
               </div>
@@ -157,8 +166,8 @@ function Register() {
               icon={Icons.User} 
               placeholder="John Doe" 
               value={formData.name} 
-              onChange={handleChange} 
-              required 
+              onChange={handleChange}
+              error={errors.name} // Pass specific error
             />
 
             <InputField 
@@ -169,7 +178,7 @@ function Register() {
               placeholder="you@company.com" 
               value={formData.email} 
               onChange={handleChange} 
-              required 
+              error={errors.email}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -181,7 +190,7 @@ function Register() {
                 placeholder="••••••" 
                 value={formData.password} 
                 onChange={handleChange} 
-                required 
+                error={errors.password}
               />
               
               <InputField 
@@ -192,7 +201,7 @@ function Register() {
                 placeholder="••••••" 
                 value={formData.confirmPassword} 
                 onChange={handleChange} 
-                required 
+                error={errors.confirmPassword}
               />
             </div>
 
@@ -216,7 +225,7 @@ function Register() {
                         isSelected
                           ? 'border-indigo-500 bg-indigo-50/50 shadow-sm'
                           : 'border-slate-100 bg-slate-50 hover:border-slate-300 hover:bg-slate-100'
-                      }`}
+                      } ${errors.roles ? 'border-red-300 bg-red-50' : ''}`}
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-3 transition-colors ${
                          isSelected ? 'bg-indigo-500 text-white' : 'bg-white text-slate-400'
@@ -226,7 +235,7 @@ function Register() {
                       <div className="font-bold text-slate-800 text-sm">{role.label}</div>
                       <div className="text-xs text-slate-500 mt-0.5">{role.desc}</div>
                       
-                      {/* Selection Indicator (Checkbox style circle) */}
+                      {/* Selection Indicator */}
                       <div className={`absolute top-3 right-3 w-5 h-5 rounded-full border transition-colors flex items-center justify-center ${
                           isSelected ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-slate-300 bg-white'
                       }`}>
@@ -236,6 +245,8 @@ function Register() {
                   );
                 })}
               </div>
+              {/* Display Role Error */}
+              {errors.roles && <p className="mt-2 text-xs text-red-500 ml-1">{errors.roles}</p>}
             </div>
 
             <button

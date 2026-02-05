@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../config/axiosInstance';
+import toast from 'react-hot-toast';
 
 const initialState = {
   appointments: [],
@@ -30,6 +31,7 @@ export const fetchAvailableSlots = createAsyncThunk(
         });
       return response.data;
     } catch (error) {
+      toast.error (error.response?.data?.error || "Failed to fetch slots")
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch slots');
     }
   }
@@ -42,6 +44,7 @@ export const bookAppointment = createAsyncThunk(
       const response = await axiosInstance.post('/appointments', appointmentData, getAuthHeaders ());
       return response.data;
     } catch (error) {
+      toast.error (error.response?.data?.error || "Failed to bok appointment")
       return rejectWithValue(error.response?.data?.message || 'Failed to book appointment');
     }
   }
@@ -54,6 +57,7 @@ export const fetchMyAppointments = createAsyncThunk(
       const response = await axiosInstance.get('/appointments/me', getAuthHeaders ());
       return response.data;
     } catch (error) {
+      toast.error (error.response?.data?.error || "Failed to fetch appointments")
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch appointments');
     }
   }
@@ -66,6 +70,7 @@ export const fetchProviderBookings = createAsyncThunk(
       const response = await axiosInstance.get('/appointments/provider', getAuthHeaders ());
       return response.data;
     } catch (error) {
+      toast.error (error.response?.data?.error || "Failed to fetch bookings")
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch bookings');
     }
   }
@@ -78,6 +83,7 @@ export const updateAppointmentStatus = createAsyncThunk(
       const response = await axiosInstance.patch(`/appointments/${appointmentId}/status`, { status }, getAuthHeaders ());
       return response.data;
     } catch (error) {
+      toast.error (error.response?.data?.error || "Failed to update status")
       return rejectWithValue(error.response?.data?.message || 'Failed to update status');
     }
   }
@@ -90,6 +96,7 @@ export const cancelAppointment = createAsyncThunk(
       const response = await axiosInstance.patch(`/appointments/${appointmentId}/cancel`, null, getAuthHeaders ());
       return response.data;
     } catch (error) {
+      toast.error (error.response?.data?.error || "Failed to cancel appointment")
       return rejectWithValue(error.response?.data?.message || 'Failed to cancel appointment');
     }
   }
@@ -104,6 +111,7 @@ export const rescheduleAppointment = createAsyncThunk(
       }, getAuthHeaders ());
       return response.data;
     } catch (error) {
+      toast.error (error.response?.data?.error || "Failed to reschedule appointment")
       return rejectWithValue(error.response?.data?.message || 'Failed to reschedule appointment');
     }
   }

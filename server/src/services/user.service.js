@@ -6,13 +6,9 @@ const createUser = async(data) => {
 
     try {
         let user = await User.findOne({ email: data.email });
+        
         if (user) {
             response.error = "Email already exists";
-            return response;
-        }
-
-        if (!data.email) {
-            response.error = "Please start sign up again";
             return response;
         }
 
@@ -32,14 +28,14 @@ const validateUser = async (email, password) => {
         let res = await User.findOne({ email });
 
         if (!res) {
-            response.error = "Invalid email";
+            response.error = "Email does not exist";
             return response;
         }
 
         const passwordsMatch = bcrypt.compareSync (password, res.password);
 
         if (!passwordsMatch) {
-            response.error = "Invalid password";
+            response.error = "Email and password do not match";
             return response;
         }
 

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../config/axiosInstance';
+import toast from 'react-hot-toast';
 
 const initialState = {
   services: [],
@@ -20,6 +21,7 @@ export const fetchMyServices = createAsyncThunk(
       const response = await axiosInstance.get('/services', getAuthHeaders ());
       return response.data;
     } catch (error) {
+      toast.error (error.response?.data?.error || "Failed to fetch services")
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch services');
     }
   }
@@ -32,6 +34,7 @@ export const createService = createAsyncThunk(
       const response = await axiosInstance.post('/services', serviceData, getAuthHeaders ());
       return response.data;
     } catch (error) {
+      toast.error (error.response?.data?.error || "Failed to create service")
       return rejectWithValue(error.response?.data?.message || 'Failed to create service');
     }
   }
@@ -44,6 +47,7 @@ export const fetchAllServices = createAsyncThunk(
       const response = await axiosInstance.get('/services/all', getAuthHeaders ());
       return response.data;
     } catch (error) {
+      toast.error (error.response?.data?.error || "Failed to fetch all services")
       return rejectWithValue(
         error.response?.data?.message || 'Failed to fetch all services'
       );
@@ -62,6 +66,7 @@ export const deleteService = createAsyncThunk(
 
       return serviceId;
     } catch (error) {
+      toast.error (error.response?.data?.error || "Failed to delete service")
       return rejectWithValue(
         error.response?.data?.message || 'Failed to delete service'
       );
@@ -81,6 +86,7 @@ export const updateService = createAsyncThunk(
 
       return response.data; // updated service
     } catch (error) {
+      toast.error (error.response?.data?.error || "Failed to update service")
       return rejectWithValue(
         error.response?.data?.message || 'Failed to update service'
       );

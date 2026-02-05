@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../config/axiosInstance';
+import toast from 'react-hot-toast';
 
 const initialState = {
   user: JSON.parse(localStorage.getItem('user')) || null,
@@ -16,7 +17,8 @@ export const register = createAsyncThunk(
       const response = await axiosInstance.post('/auth/register', userData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+      toast.error (error.response?.data?.error || "Registration failed")
+      return rejectWithValue(error.response?.data?.error || 'Registration failed');
     }
   }
 );
@@ -28,6 +30,7 @@ export const login = createAsyncThunk(
       const response = await axiosInstance.post('/auth/signin', credentials);
       return response.data;
     } catch (error) {
+      toast.error (error.response?.data?.error || "Login failed")
       return rejectWithValue(error.response?.data?.message || 'Login failed');
     }
   }

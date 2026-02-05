@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { login, clearError } from '../../redux/slices/auth.slice';
+// 1. Import validation util if available, else standard validation is used below
+import { validateLoginForm } from '../../utils/validation'; 
 
-// --- Reusable Icons (Same as Register for consistency) ---
+// --- Reusable Icons ---
 const Icons = {
   Mail: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
   Lock: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>,
@@ -14,7 +16,7 @@ const Icons = {
 };
 
 // --- Helper Component for Inputs ---
-const InputField = ({ label, icon: Icon, type = "text", isPassword = false, ...props }) => {
+const InputField = ({ label, icon: Icon, type = "text", isPassword = false, error, ...props }) => {
   const [show, setShow] = useState(false);
   const inputType = isPassword ? (show ? "text" : "password") : type;
 
@@ -28,7 +30,9 @@ const InputField = ({ label, icon: Icon, type = "text", isPassword = false, ...p
         <input
           {...props}
           type={inputType}
-          className="block w-full pl-10 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 sm:text-sm"
+          className={`block w-full pl-10 pr-10 py-2.5 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 sm:text-sm ${
+            error ? 'border-red-500 focus:ring-red-200 focus:border-red-500' : 'border-slate-300'
+          }`}
         />
         {isPassword && (
           <button
@@ -40,6 +44,7 @@ const InputField = ({ label, icon: Icon, type = "text", isPassword = false, ...p
           </button>
         )}
       </div>
+      {error && <p className="mt-1 text-xs text-red-500 ml-1">{error}</p>}
     </div>
   );
 };
@@ -47,12 +52,14 @@ const InputField = ({ label, icon: Icon, type = "text", isPassword = false, ...p
 function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
+  const { loading, error: serverError, isAuthenticated } = useSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+
+  const [errors, setErrors] = useState({}); // Validation Errors
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -71,10 +78,23 @@ function Login() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+    // Clear error on change
+    if (errors[e.target.name]) {
+      setErrors({ ...errors, [e.target.name]: '' });
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // 2. Validate Form
+    const { isValid, errors: validationErrors } = validateLoginForm(formData);
+
+    if (!isValid) {
+      setErrors(validationErrors);
+      return;
+    }
+
     dispatch(login(formData));
   };
 
@@ -103,8 +123,8 @@ function Login() {
             </p>
           </div>
 
-          {/* Error Message */}
-          {error && (
+          {/* Server Error Message */}
+          {serverError && (
             <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg animate-pulse">
               <div className="flex">
                 <div className="flex-shrink-0">
@@ -114,7 +134,7 @@ function Login() {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-red-700 font-medium">
-                    {error}
+                    {serverError}
                   </p>
                 </div>
               </div>
@@ -131,7 +151,7 @@ function Login() {
               placeholder="you@company.com" 
               value={formData.email} 
               onChange={handleChange} 
-              required 
+              error={errors.email} // Pass error prop
             />
 
             <div>
@@ -143,13 +163,8 @@ function Login() {
                 placeholder="••••••••" 
                 value={formData.password} 
                 onChange={handleChange} 
-                required 
+                error={errors.password} // Pass error prop
               />
-              <div className="flex justify-end mt-1">
-                <Link to="/forgot-password" className="text-xs font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
-                  Forgot your password?
-                </Link>
-              </div>
             </div>
 
             <button

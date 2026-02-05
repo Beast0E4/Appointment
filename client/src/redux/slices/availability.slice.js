@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../config/axiosInstance';
+import toast from 'react-hot-toast';
 
 const initialState = {
   availability: [],
@@ -20,6 +21,7 @@ export const fetchMyAvailability = createAsyncThunk(
       const response = await axiosInstance.get(`/availability/${serviceId}`, getAuthHeaders ());
       return response.data;
     } catch (error) {
+      toast.error (error.response?.data?.error || "Failed to fetch availability")
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch availability');
     }
   }
@@ -32,6 +34,7 @@ export const createAvailability = createAsyncThunk(
       const response = await axiosInstance.post('/availability', availabilityData, getAuthHeaders ());
       return response.data;
     } catch (error) {
+      toast.error (error.response?.data?.error || "Failed to create availability")
       return rejectWithValue(error.response?.data?.message || 'Failed to create availability');
     }
   }
