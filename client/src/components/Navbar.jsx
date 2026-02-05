@@ -57,7 +57,7 @@ function Navbar() {
           {/* Logo Section */}
           <Link to="/" className="flex items-center space-x-3 group shrink-0">
             <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:rotate-12 transition-transform duration-300">
-              <Icons.Logo />
+              <img src='./hotel.png'/>
             </div>
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600">
               BookEaxy
