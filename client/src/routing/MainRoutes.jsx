@@ -1,25 +1,19 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
-// Layout
 import MainLayout from "./MainLayout";
 
-// Route Guards
 import PublicRoute from "./PublicRoute";
 import ProtectedRoute from "./ProtectedRoute";
 
-// Auth Pages
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 
-// Common Pages
 import Home from "../pages/Home";
 
-// User Pages
 import ServiceList from "../pages/user/ServiceList";
 import BookingPage from "../pages/user/BookingPage";
 import MyAppointments from "../pages/user/MyAppointments";
 
-// Provider Pages
 import ProviderDashboard from "../pages/provider/ProviderDashboard";
 import ManageServices from "../pages/provider/ManageServices";
 import ProviderBookings from "../pages/provider/ProviderBookings";
@@ -28,7 +22,6 @@ import ManageAvailability from "../pages/provider/ManageAvailability";
 function MainRoutes() {
   return (
     <Routes>
-      {/* ---------- Public Auth Routes (NO NAVBAR) ---------- */}
       <Route
         path="/login"
         element={
@@ -47,11 +40,9 @@ function MainRoutes() {
         }
       />
 
-      {/* ---------- Routes WITH NAVBAR ---------- */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
 
-        {/* User Routes */}
         <Route
           path="/services"
           element={
@@ -79,7 +70,6 @@ function MainRoutes() {
           }
         />
 
-        {/* Provider Routes */}
         <Route
           path="/provider/dashboard"
           element={
@@ -117,7 +107,6 @@ function MainRoutes() {
         />
       </Route>
 
-      {/* ---------- Fallback ---------- */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

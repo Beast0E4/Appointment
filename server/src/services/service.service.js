@@ -1,11 +1,10 @@
 const Service = require("../models/service.model");
-const User = require("../models/user.model"); // Import User model
+const User = require("../models/user.model");
 
 const createService = async (userId, data) => {
   const response = {};
 
   try {
-    // 1. Validate User and Role
     const user = await User.findById(userId);
     if (!user) {
       response.error = "User not found";
@@ -17,9 +16,8 @@ const createService = async (userId, data) => {
       return response;
     }
 
-    // 2. Create Service linked directly to the User (Provider)
     const service = await Service.create({
-      providerId: user._id, // Using the User's ID directly
+      providerId: user._id,
       name: data.name.toUpperCase(),
       description: data.description,
       duration: data.duration,
@@ -55,14 +53,12 @@ const getMyServices = async (userId) => {
   const response = {};
 
   try {
-    // 1. Validate User and Role
     const user = await User.findById(userId);
     if (!user || !user.roles.includes("PROVIDER")) {
       response.error = "Unauthorized: Provider access required";
       return response;
     }
 
-    // 2. Fetch services belonging to this user
     const services = await Service.find({
       providerId: userId,
     });
@@ -80,17 +76,15 @@ const updateService = async (userId, serviceId, data) => {
   const response = {};
 
   try {
-    // 1. Validate User and Role
     const user = await User.findById(userId);
     if (!user || !user.roles.includes("PROVIDER")) {
       response.error = "Unauthorized: Provider access required";
       return response;
     }
 
-    // 2. Find and update
     const service = await Service.findOne({
       _id: serviceId,
-      providerId: userId, // Ensure ownership
+      providerId: userId,
     });
 
     if (!service) {
@@ -122,7 +116,7 @@ const deleteService = async (userId, serviceId) => {
 
     const deletedService = await Service.findOneAndDelete({
       _id: serviceId,
-      providerId: userId, // Ensure ownership
+      providerId: userId,
     });
 
     if (!deletedService) {

@@ -1,11 +1,8 @@
 const Appointment = require("../models/appointment.model");
-const User = require("../models/user.model"); // Replaced ProviderProfile
+const User = require("../models/user.model");
 const Service = require("../models/service.model");
 const Availability = require("../models/availability.model");
 const generateSlots = require("../utils/slotGenerator");
-
-// Helper to match Date.getDay() with your Availability model strings
-const dayMap = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
 
 const getDaySlots = async (serviceId, date) => {
   const response = {};
@@ -19,22 +16,27 @@ const getDaySlots = async (serviceId, date) => {
 
     const dayOfWeek = new Date(date).getDay();
 
-    const availability = await Availability.findOne({
+    const availabilities = await Availability.find({
       serviceId,
       dayOfWeek,
       isHoliday: false,
     });
 
-    if (!availability) {
+    if (!availabilities || availabilities.length === 0) {
       response.slots = [];
       return response;
     }
 
-    const allSlots = generateSlots(
-      availability.startTime,
-      availability.endTime,
-      service.duration
-    );
+    let allSlots = [];
+
+    for (const availability of availabilities) {
+      const slots = generateSlots(
+        availability.startTime,
+        availability.endTime,
+        service.duration
+      );
+      allSlots = allSlots.concat(slots);
+    }
 
     const bookedAppointments = await Appointment.find({
       providerId: service.providerId,
@@ -60,13 +62,13 @@ const getDaySlots = async (serviceId, date) => {
 };
 
 
+
 const bookAppointment = async (userId, data) => {
   const response = {};
 
   try {
     const { serviceId, dateTime } = data;
 
-    // 1️⃣ Fetch service to get providerId
     const service = await Service.findById(serviceId);
     if (!service) {
       response.error = "Service not found";
@@ -75,17 +77,14 @@ const bookAppointment = async (userId, data) => {
 
     const providerId = service.providerId;
 
-    // 2️⃣ Parse date & time
     const dateObj = new Date(dateTime);
 
-    const date = dateObj.toISOString().split("T")[0]; // YYYY-MM-DD
-    const startTime = dateObj.toTimeString().slice(0, 5); // HH:mm
+    const date = dateObj.toISOString().split("T")[0];
+    const startTime = dateObj.toTimeString().slice(0, 5);
 
-    // Optional: calculate endTime from service duration
     const endDate = new Date(dateObj.getTime() + service.duration * 60000);
     const endTime = endDate.toTimeString().slice(0, 5);
 
-    // 3️⃣ Check if slot is already taken for provider
     const conflict = await Appointment.findOne({
       providerId,
       date,
@@ -98,7 +97,6 @@ const bookAppointment = async (userId, data) => {
       return response;
     }
 
-    // 4️⃣ Check if user already has appointment at this time
     const userConflict = await Appointment.findOne({
       userId,
       date,
@@ -111,7 +109,6 @@ const bookAppointment = async (userId, data) => {
       return response;
     }
 
-    // 5️⃣ Create appointment
     const appointment = await Appointment.create({
       userId,
       providerId,
@@ -141,14 +138,12 @@ const updateAppointmentStatus = async (userId, appointmentId, status) => {
       return response;
     }
 
-    // 1. Validate User is a Provider
     const user = await User.findById(userId);
     if (!user || !user.roles.includes("PROVIDER")) {
       response.error = "Unauthorized: Provider access required";
       return response;
     }
 
-    // 2. Check if the appointment belongs to this Provider
     if (!appointment.providerId.equals(userId)) {
       response.error = "Unauthorized: This appointment does not belong to you";
       return response;
@@ -170,10 +165,9 @@ const getUserAppointments = async (userId) => {
   const response = {};
 
   try {
-    // Populate 'providerId' to get provider details from User model
     const appointments = await Appointment.find({ userId })
       .populate("serviceId")
-      .populate("providerId", "name email") // Updated & selected fields
+      .populate("providerId", "name email")
       .sort({ date: 1, startTime: 1 });
 
     response.appointments = appointments;
@@ -189,16 +183,14 @@ const getProviderAppointments = async (userId) => {
   const response = {};
 
   try {
-    // 1. Validate User is a Provider
     const user = await User.findById(userId);
     if (!user || !user.roles.includes("PROVIDER")) {
       response.error = "Unauthorized: Provider access required";
       return response;
     }
 
-    // 2. Find appointments where providerId matches userId
     const appointments = await Appointment.find({
-      providerId: userId, // Updated from providerId
+      providerId: userId,
     })
       .populate("serviceId")
       .populate("userId", "name email")
@@ -223,12 +215,9 @@ const cancelAppointment = async (userId, appointmentId) => {
       return response;
     }
 
-    // Allow cancellation if User is the owner OR User is the Provider
     const isOwner = appointment.userId.equals(userId);
     const isProvider = appointment.providerId.equals(userId);
 
-    // Original logic was strict on PENDING status for users, 
-    // but usually providers can cancel anytime.
     if (!isOwner && !isProvider) {
       response.error = "Unauthorized to cancel this appointment";
       return response;
@@ -261,9 +250,8 @@ const rescheduleAppointment = async (userId, appointmentId, data) => {
       return response;
     }
 
-    // Check for conflict at the new time for the SAME provider
     const conflict = await Appointment.findOne({
-      providerId: appointment.providerId, // Updated
+      providerId: appointment.providerId,
       date: data.date,
       startTime: data.startTime,
       status: { $in: ["PENDING", "CONFIRMED"] },
@@ -277,7 +265,7 @@ const rescheduleAppointment = async (userId, appointmentId, data) => {
     appointment.date = data.date;
     appointment.startTime = data.startTime;
     appointment.endTime = data.endTime;
-    appointment.status = "PENDING"; // Reset status to pending for approval
+    appointment.status = "PENDING";
 
     await appointment.save();
 

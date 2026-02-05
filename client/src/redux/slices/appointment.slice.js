@@ -149,7 +149,6 @@ const appointmentSlice = createSlice({
         state.loading = false;
         state.providerBookings = action.payload;
       })
-      // Update appointment status
       .addCase(updateAppointmentStatus.fulfilled, (state, action) => {
         const index = state.providerBookings.findIndex(
           (apt) => apt._id === action.payload._id
@@ -158,7 +157,6 @@ const appointmentSlice = createSlice({
           state.providerBookings[index] = action.payload;
         }
       })
-      // Cancel appointment
       .addCase(cancelAppointment.fulfilled, (state, action) => {
         const index = state.appointments.findIndex(
           (apt) => apt._id === action.payload._id
@@ -167,7 +165,6 @@ const appointmentSlice = createSlice({
           state.appointments[index] = action.payload;
         }
       })
-      // Reschedule appointment
       .addCase(rescheduleAppointment.fulfilled, (state, action) => {
         const index = state.appointments.findIndex(
           (apt) => apt._id === action.payload._id

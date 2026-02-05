@@ -9,7 +9,7 @@ const serviceSchema = new mongoose.Schema(
     },
     name: { type: String, required: true, enum: ["DENTIST", "CAR RENTAL", "SALON"] },
     description: {type: String},
-    duration: { type: Number, required: true }, // minutes
+    duration: { type: Number, required: true },
     price: { type: Number, required: true },
   },
   { timestamps: true }

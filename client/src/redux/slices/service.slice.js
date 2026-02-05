@@ -84,7 +84,7 @@ export const updateService = createAsyncThunk(
         getAuthHeaders()
       );
 
-      return response.data; // updated service
+      return response.data;
     } catch (error) {
       toast.error (error.response?.data?.error || "Failed to update service")
       return rejectWithValue(
