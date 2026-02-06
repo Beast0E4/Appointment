@@ -12,7 +12,7 @@ exports.getDaySlots = async (req, res) => {
   if (result.error) {
     return res
       .status(StatusCodes.BAD_REQUEST)
-      .json({ message: result.error });
+      .json({ error: result.error });
   }
 
   return res
@@ -29,7 +29,7 @@ exports.bookAppointment = async (req, res) => {
   if (result.error) {
     return res
       .status(StatusCodes.CONFLICT)
-      .json({ message: result.error });
+      .json({ error: result.error });
   }
 
   return res
@@ -50,7 +50,7 @@ exports.updateAppointmentStatus = async (req, res) => {
   if (result.error) {
     return res
       .status(StatusCodes.FORBIDDEN)
-      .json({ message: result.error });
+      .json({ error: result.error });
   }
 
   return res
@@ -64,7 +64,7 @@ exports.getMyAppointments = async (req, res) => {
   if (result.error) {
     return res
       .status(StatusCodes.BAD_REQUEST)
-      .json({ message: result.error });
+      .json({ error: result.error });
   }
 
   return res
@@ -78,7 +78,7 @@ exports.getProviderBookings = async (req, res) => {
   if (result.error) {
     return res
       .status(StatusCodes.BAD_REQUEST)
-      .json({ message: result.error });
+      .json({ error: result.error });
   }
 
   return res
@@ -97,7 +97,7 @@ exports.cancelAppointment = async (req, res) => {
   if (result.error) {
     return res
       .status(StatusCodes.FORBIDDEN)
-      .json({ message: result.error });
+      .json({ error: result.error });
   }
 
   return res
@@ -118,7 +118,7 @@ exports.rescheduleAppointment = async (req, res) => {
   if (result.error) {
     return res
       .status(StatusCodes.CONFLICT)
-      .json({ message: result.error });
+      .json({ error: result.error });
   }
 
   return res

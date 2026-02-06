@@ -36,7 +36,6 @@ const getDaySlots = async (serviceId, date) => {
         service.duration
       );
       allSlots = allSlots.concat(slots);
-      console.log (allSlots);
     }
 
     const bookedAppointments = await Appointment.find({

@@ -10,7 +10,7 @@ exports.createAvailability = async (req, res) => {
   if (result.error) {
     return res
       .status(StatusCodes.BAD_REQUEST)
-      .json({ message: result.error });
+      .json({ error: result.error });
   }
 
   return res
@@ -24,7 +24,7 @@ exports.getMyAvailability = async (req, res) => {
   if (result.error) {
     return res
       .status(StatusCodes.BAD_REQUEST)
-      .json({ message: result.error });
+      .json({ error: result.error });
   }
 
   return res

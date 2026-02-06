@@ -17,10 +17,16 @@ const createAvailability = async (userId, data) => {
       return response;
     }
 
-    const existing = await Availability.findOne({
-      serviceId: data.serviceId, 
-      dayOfWeek: data.dayOfWeek,
-    });
+    const service = await Service.findById(data.serviceId);
+    if (!service) {
+      response.error = "Service not found";
+      return response;
+    }
+
+    if (parseInt(data.slotDuration) < parseInt(service.duration)) {
+      response.error = `Slot duration (${data.slotDuration}m) cannot be less than the service duration (${service.duration}m)`;
+      return response;
+    }
 
     const availability = await Availability.create(data);
 
@@ -28,6 +34,7 @@ const createAvailability = async (userId, data) => {
     return response;
 
   } catch (error) {
+    console.error("Create Availability Error:", error);
     response.error = error.message;
     return response;
   }

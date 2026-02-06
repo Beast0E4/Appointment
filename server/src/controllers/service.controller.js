@@ -8,7 +8,7 @@ exports.createService = async (req, res) => {
   if (result.error) {
     return res
       .status(StatusCodes.BAD_REQUEST)
-      .json({ message: result.error });
+      .json({ error: result.error });
   }
 
   return res
@@ -22,7 +22,7 @@ exports.getAllServices = async (req, res) => {
   if (result.error) {
     return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ message: result.error });
+      .json({ error: result.error });
   }
 
   return res
@@ -36,7 +36,7 @@ exports.getMyServices = async (req, res) => {
   if (result.error) {
     return res
       .status(StatusCodes.BAD_REQUEST)
-      .json({ message: result.error });
+      .json({ error: result.error });
   }
 
   return res
@@ -55,7 +55,7 @@ exports.updateService = async (req, res) => {
   if (result.error) {
     return res
       .status(StatusCodes.BAD_REQUEST)
-      .json({ message: result.error });
+      .json({ error: result.error });
   }
 
   return res
@@ -73,7 +73,7 @@ exports.deleteService = async (req, res) => {
   if (result.error) {
     return res
       .status(StatusCodes.BAD_REQUEST)
-      .json({ message: result.error });
+      .json({ error: result.error });
   }
 
   return res
