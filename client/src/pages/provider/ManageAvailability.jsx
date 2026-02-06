@@ -13,6 +13,16 @@ const Icons = {
   Empty: () => <svg className="w-20 h-20 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
 };
 
+// --- Helper: Convert 24h string to 12h AM/PM ---
+const formatTo12Hour = (timeString) => {
+  if (!timeString) return '';
+  const [hours, minutes] = timeString.split(':');
+  const h = parseInt(hours, 10);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const formattedHour = h % 12 || 12; // Converts 0 to 12
+  return `${formattedHour}:${minutes} ${ampm}`;
+};
+
 // --- Reusable Form Elements ---
 const SelectField = ({ label, id, children, ...props }) => (
   <div>
@@ -61,7 +71,7 @@ function ManageAvailability() {
   ];
 
   const [formData, setFormData] = useState({
-    dayOfWeek: 1, // Default to Monday (number)
+    dayOfWeek: 1, 
     startTime: '09:00',
     endTime: '17:00',
     slotDuration: 60,
@@ -218,7 +228,6 @@ function ManageAvailability() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {daysOfWeek.map((day, index) => {
-              // Compare numeric values now (backend stores numbers)
               const daySlots = availability.filter((slot) => slot.dayOfWeek === day.value);
               
               if (daySlots.length === 0) return null;
@@ -251,8 +260,9 @@ function ManageAvailability() {
                             <Icons.Clock />
                           </div>
                           <div>
+                            {/* HERE IS THE CHANGE */}
                             <span className="block font-semibold text-slate-700">
-                              {slot.startTime} - {slot.endTime}
+                              {formatTo12Hour(slot.startTime)} - {formatTo12Hour(slot.endTime)}
                             </span>
                           </div>
                         </div>
