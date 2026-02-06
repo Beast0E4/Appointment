@@ -31,6 +31,6 @@ module.exports.userSchema = Joi.object({
             "string.pattern.base": "Password must have at least one uppercase letter, one lowercase letter, one number, and one special character."
         }),
     roles: Joi.array()
-    .items(Joi.string().valid("USER", "PROVIDER"))
-    .default(["USER"]),
+        .items(Joi.string().valid("USER", "PROVIDER"))
+        .default(["USER"]),
 });

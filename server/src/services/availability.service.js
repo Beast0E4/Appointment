@@ -12,11 +12,6 @@ const createAvailability = async (userId, data) => {
       return response;
     }
 
-    if (!user.roles.includes("PROVIDER")) {
-      response.error = "Unauthorized: Only providers can set availability";
-      return response;
-    }
-
     const service = await Service.findById(data.serviceId);
     if (!service) {
       response.error = "Service not found";

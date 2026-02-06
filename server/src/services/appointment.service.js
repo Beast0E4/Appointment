@@ -189,7 +189,7 @@ const updateAppointmentStatus = async (userId, appointmentId, status) => {
     }
 
     const user = await User.findById(userId);
-    if (!user || !user.roles.includes("PROVIDER")) {
+    if (!user) {
       response.error = "Unauthorized: Provider access required";
       return response;
     }
@@ -234,7 +234,7 @@ const getProviderAppointments = async (userId) => {
 
   try {
     const user = await User.findById(userId);
-    if (!user || !user.roles.includes("PROVIDER")) {
+    if (!user) {
       response.error = "Unauthorized: Provider access required";
       return response;
     }

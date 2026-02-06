@@ -1,5 +1,7 @@
 const Service = require("../models/service.model");
 const User = require("../models/user.model");
+const Availability = require("../models/availability.model")
+const Appointment = require("../models/appointment.model")
 
 const createService = async (userId, data) => {
   const response = {};
@@ -8,11 +10,6 @@ const createService = async (userId, data) => {
     const user = await User.findById(userId);
     if (!user) {
       response.error = "User not found";
-      return response;
-    }
-
-    if (!user.roles.includes("PROVIDER")) {
-      response.error = "Unauthorized: You must be a Provider to create services";
       return response;
     }
 
@@ -54,7 +51,7 @@ const getMyServices = async (userId) => {
 
   try {
     const user = await User.findById(userId);
-    if (!user || !user.roles.includes("PROVIDER")) {
+    if (!user) {
       response.error = "Unauthorized: Provider access required";
       return response;
     }
@@ -77,7 +74,7 @@ const updateService = async (userId, serviceId, data) => {
 
   try {
     const user = await User.findById(userId);
-    if (!user || !user.roles.includes("PROVIDER")) {
+    if (!user) {
       response.error = "Unauthorized: Provider access required";
       return response;
     }
@@ -109,7 +106,7 @@ const deleteService = async (userId, serviceId) => {
 
   try {
     const user = await User.findById(userId);
-    if (!user || !user.roles.includes("PROVIDER")) {
+    if (!user) {
       response.error = "Unauthorized: Provider access required";
       return response;
     }
@@ -124,10 +121,15 @@ const deleteService = async (userId, serviceId) => {
       return response;
     }
 
-    response.message = "Service permanently deleted";
+    await Availability.deleteMany({ serviceId: serviceId });
+
+    await Appointment.deleteMany({ serviceId: serviceId });
+
+    response.message = "Service and all associated availability and appointments permanently deleted";
     return response;
 
   } catch (error) {
+    console.error("Delete Service Error:", error);
     response.error = error.message;
     return response;
   }
