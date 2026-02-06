@@ -1,11 +1,12 @@
 const express = require("express");
 const router = express.Router();
-
 const { hasRole } = require("../middlewares/hasRole");
 const availabilityController = require("../controllers/availability.controller");
 const { isUserAuthenticated } = require("../middlewares/isUserAuthenticated");
 
 router.post("/", isUserAuthenticated, hasRole("PROVIDER"), availabilityController.createAvailability);
 router.get("/:serviceId", isUserAuthenticated, hasRole("PROVIDER"), availabilityController.getMyAvailability);
+router.put("/:availabilityId", isUserAuthenticated, hasRole("PROVIDER"), availabilityController.updateAvailability);
+router.delete("/:availabilityId", isUserAuthenticated, hasRole("PROVIDER"), availabilityController.deleteAvailability);
 
 module.exports = router;

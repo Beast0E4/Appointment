@@ -33,12 +33,12 @@ const createService = async (userId, data) => {
   }
 };
 
-const getAllServices = async () => {
+const getAllServices = async (userId) => {
   const response = {};
 
   try {
-    const services = await Service.find()
-      .populate("providerId", "name email")
+    const services = await Service.find({ providerId: { $ne: userId } })
+      .populate("providerId", "name email");
 
     response.services = services;
     return response;

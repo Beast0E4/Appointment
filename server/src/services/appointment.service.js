@@ -14,12 +14,12 @@ const getDaySlots = async (serviceId, date) => {
       return response;
     }
 
-    const dayOfWeek = new Date(date).getDay();
+    const dateObj = new Date(date);
+    const dayOfWeek = dateObj.getDay();
 
     const availabilities = await Availability.find({
       serviceId,
       dayOfWeek,
-      isHoliday: false,
     });
 
     if (!availabilities || availabilities.length === 0) {
@@ -30,12 +30,25 @@ const getDaySlots = async (serviceId, date) => {
     let allSlots = [];
 
     for (const availability of availabilities) {
+      const isHolidayToday = availability.holidays && availability.holidays.some(holidayDate => {
+         return holidayDate.toISOString().split('T')[0] === date;
+      });
+
+      if (isHolidayToday) {
+        continue; 
+      }
+
       const slots = generateSlots(
         availability.startTime,
         availability.endTime,
-        service.duration
+        availability.slotDuration 
       );
       allSlots = allSlots.concat(slots);
+    }
+
+    if (allSlots.length === 0) {
+        response.slots = [];
+        return response;
     }
 
     const bookedAppointments = await Appointment.find({
@@ -56,12 +69,11 @@ const getDaySlots = async (serviceId, date) => {
     return response;
 
   } catch (error) {
+    console.error("Get Slots Error:", error);
     response.error = error.message;
     return response;
   }
 };
-
-
 
 const bookAppointment = async (userId, data) => {
   const response = {};
@@ -80,22 +92,45 @@ const bookAppointment = async (userId, data) => {
     const dateObj = new Date(dateTime);
     const timeZone = 'Asia/Kolkata';
 
+    const date = new Intl.DateTimeFormat('en-CA', { timeZone }).format(dateObj);
+    const dayOfWeek = dateObj.getDay();
+
+    const availability = await Availability.findOne({
+      serviceId,
+      dayOfWeek
+    });
+
+    if (!availability) {
+      response.error = "Provider is not available on this day";
+      return response;
+    }
+
+    const isHoliday = availability.holidays && availability.holidays.some(holidayDate => {
+      return holidayDate.toISOString().split('T')[0] === date;
+    });
+
+    if (isHoliday) {
+      response.error = "Cannot book: Provider is on holiday on this date";
+      return response;
+    }
+
     const getPart = (date, options) => 
       new Intl.DateTimeFormat('en-US', { timeZone, ...options }).format(date);
-
-    const date = new Intl.DateTimeFormat('en-CA', { timeZone }).format(dateObj);
 
     const startHours = getPart(dateObj, { hour: '2-digit', hour12: false }).padStart(2, '0');
     const startMinutes = getPart(dateObj, { minute: '2-digit' }).padStart(2, '0');
     const startTime = `${startHours}:${startMinutes}`;
 
     const endDateObj = new Date(dateObj.getTime() + service.duration * 60000);
-    
     const endHours = getPart(endDateObj, { hour: '2-digit', hour12: false }).padStart(2, '0');
     const endMinutes = getPart(endDateObj, { minute: '2-digit' }).padStart(2, '0');
     const endTime = `${endHours}:${endMinutes}`;
 
-    
+    if (startTime < availability.startTime || startTime >= availability.endTime) {
+       response.error = "Selected time is outside working hours";
+       return response;
+    }
+
     const conflictQuery = {
       date,
       status: { $in: ["PENDING", "CONFIRMED"] },
@@ -142,7 +177,6 @@ const bookAppointment = async (userId, data) => {
     return response;
   }
 };
-
 
 const updateAppointmentStatus = async (userId, appointmentId, status) => {
   const response = {};
@@ -266,11 +300,39 @@ const rescheduleAppointment = async (userId, appointmentId, data) => {
       return response;
     }
 
+    const dateObj = new Date(data.date);
+    const dayOfWeek = dateObj.getDay();
+
+    const availability = await Availability.findOne({
+      serviceId: appointment.serviceId,
+      dayOfWeek
+    });
+
+    if (!availability) {
+      response.error = "Provider is not available on this new date";
+      return response;
+    }
+
+    const isHoliday = availability.holidays && availability.holidays.some(holidayDate => {
+      return holidayDate.toISOString().split('T')[0] === data.date;
+    });
+
+    if (isHoliday) {
+      response.error = "Cannot reschedule: Provider is on holiday on this date";
+      return response;
+    }
+
+    if (data.startTime < availability.startTime || data.startTime >= availability.endTime) {
+        response.error = "Selected time is outside working hours";
+        return response;
+     }
+
     const conflict = await Appointment.findOne({
       providerId: appointment.providerId,
       date: data.date,
       startTime: data.startTime,
       status: { $in: ["PENDING", "CONFIRMED"] },
+      _id: { $ne: appointmentId } 
     });
 
     if (conflict) {

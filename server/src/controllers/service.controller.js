@@ -17,7 +17,7 @@ exports.createService = async (req, res) => {
 };
 
 exports.getAllServices = async (req, res) => {
-  const result = await serviceService.getAllServices();
+  const result = await serviceService.getAllServices(req.user.id);
 
   if (result.error) {
     return res

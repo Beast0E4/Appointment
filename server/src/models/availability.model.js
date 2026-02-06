@@ -11,7 +11,10 @@ const availabilitySchema = new mongoose.Schema(
     startTime: { type: String, required: true },
     endTime: { type: String, required: true },
     slotDuration: { type: Number, required: true },
-    isHoliday: { type: Boolean, default: false },
+    holidays: { 
+      type: [Date], 
+      default: [] 
+    },
   },
   { timestamps: true }
 );
