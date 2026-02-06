@@ -2,7 +2,6 @@ const { StatusCodes } = require("http-status-codes");
 const serviceService = require("../services/service.service");
 
 exports.createService = async (req, res) => {
-  console.log (req.user.id, req.body);
   const result = await serviceService.createService(req.user.id, req.body);
 
   if (result.error) {

@@ -232,11 +232,11 @@ function ManageServices() {
                 name="duration"
                 type="number"
                 required
-                min="15"
-                step="15"
+                min="1" // Allows any positive number
+                // step="15" // Removed to allow any minute value
                 value={formData.duration}
                 onChange={handleChange}
-                placeholder="60"
+                placeholder="e.g. 45"
               />
 
               <div>
@@ -246,7 +246,7 @@ function ManageServices() {
                 <textarea
                   id="description"
                   name="description"
-                  required
+                  // required // Removed required attribute
                   value={formData.description}
                   onChange={handleChange}
                   rows="4"
