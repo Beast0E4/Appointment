@@ -79,28 +79,34 @@ const bookAppointment = async (userId, data) => {
     const providerId = service.providerId;
 
     const dateObj = new Date(dateTime);
+    const timeZone = 'Asia/Kolkata';
 
-    const pad = (n) => String(n).padStart(2, "0");
+    const getPart = (date, options) => 
+      new Intl.DateTimeFormat('en-US', { timeZone, ...options }).format(date);
 
-    const year = dateObj.getFullYear();
-    const month = pad(dateObj.getMonth() + 1);
-    const day = pad(dateObj.getDate());
-    const date = `${year}-${month}-${day}`;
+    const date = new Intl.DateTimeFormat('en-CA', { timeZone }).format(dateObj);
 
-    const hours = pad(dateObj.getHours());
-    const minutes = pad(dateObj.getMinutes());
-    const startTime = `${hours}:${minutes}`;
+    const startHours = getPart(dateObj, { hour: '2-digit', hour12: false }).padStart(2, '0');
+    const startMinutes = getPart(dateObj, { minute: '2-digit' }).padStart(2, '0');
+    const startTime = `${startHours}:${startMinutes}`;
 
-    const endDate = new Date(dateObj.getTime() + service.duration * 60000);
-    const endHours = pad(endDate.getHours());
-    const endMinutes = pad(endDate.getMinutes());
+    const endDateObj = new Date(dateObj.getTime() + service.duration * 60000);
+    
+    const endHours = getPart(endDateObj, { hour: '2-digit', hour12: false }).padStart(2, '0');
+    const endMinutes = getPart(endDateObj, { minute: '2-digit' }).padStart(2, '0');
     const endTime = `${endHours}:${endMinutes}`;
+
+    
+    const conflictQuery = {
+      date,
+      status: { $in: ["PENDING", "CONFIRMED"] },
+      startTime: { $lt: endTime }, 
+      endTime: { $gt: startTime } 
+    };
 
     const conflict = await Appointment.findOne({
       providerId,
-      date,
-      startTime,
-      status: { $in: ["PENDING", "CONFIRMED"] },
+      ...conflictQuery
     });
 
     if (conflict) {
@@ -110,9 +116,7 @@ const bookAppointment = async (userId, data) => {
 
     const userConflict = await Appointment.findOne({
       userId,
-      date,
-      startTime,
-      status: { $in: ["PENDING", "CONFIRMED"] },
+      ...conflictQuery
     });
 
     if (userConflict) {
@@ -134,6 +138,7 @@ const bookAppointment = async (userId, data) => {
     return response;
 
   } catch (error) {
+    console.error("Booking Error:", error);
     response.error = error.message;
     return response;
   }
