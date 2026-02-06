@@ -131,6 +131,8 @@ const deleteService = async (userId, serviceId) => {
 
     await Availability.deleteMany({ serviceId: serviceId });
 
+    await Appointment.deleteMany({ serviceId: serviceId });
+
     response.message = "Service and availability slots deleted successfully";
     return response;
 
