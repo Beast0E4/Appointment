@@ -26,8 +26,8 @@ const appointmentSchema = new mongoose.Schema(
 );
 
 appointmentSchema.index(
-  { providerProfileId: 1, date: 1, startTime: 1, endTime: 1 },
-  { unique: false }
+  { serviceId: 1, date: 1, startTime: 1, endTime: 1 },
+  { unique: true }
 );
 
 module.exports = mongoose.model("Appointment", appointmentSchema);

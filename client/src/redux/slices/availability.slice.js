@@ -50,14 +50,30 @@ const availabilitySlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchMyAvailability.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchMyAvailability.fulfilled, (state, action) => {
         state.loading = false;
         state.availability = action.payload;
+      })
+      .addCase(fetchMyAvailability.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(createAvailability.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
       .addCase(createAvailability.fulfilled, (state, action) => {
         state.loading = false;
         state.availability.push(action.payload);
       })
+      .addCase(createAvailability.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 

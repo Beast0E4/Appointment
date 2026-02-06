@@ -85,7 +85,7 @@ function ManageAvailability() {
     const { name, value } = e.target;
     // If changing day or duration, ensure it's a number
     const finalValue = (name === 'dayOfWeek' || name === 'slotDuration') 
-      ? parseInt(value, 10) 
+      ? (value === '' ? '' : parseInt(value, 10)) // Handle empty input gracefully
       : value;
 
     setFormData({ ...formData, [name]: finalValue });
@@ -178,20 +178,18 @@ function ManageAvailability() {
                 />
               </div>
 
-              <SelectField
-                label="Slot Duration"
+              {/* MODIFIED: Changed from SelectField to InputField */}
+              <InputField
+                label="Slot Duration (minutes)"
                 id="slotDuration"
                 name="slotDuration"
+                type="number"
+                min="1"
+                placeholder="e.g. 60"
+                required
                 value={formData.slotDuration}
                 onChange={handleChange}
-              >
-                <option value="15">15 minutes</option>
-                <option value="30">30 minutes</option>
-                <option value="45">45 minutes</option>
-                <option value="60">60 minutes</option>
-                <option value="90">90 minutes</option>
-                <option value="120">120 minutes</option>
-              </SelectField>
+              />
 
               <div className="flex justify-end pt-2">
                 <button
@@ -260,7 +258,6 @@ function ManageAvailability() {
                             <Icons.Clock />
                           </div>
                           <div>
-                            {/* HERE IS THE CHANGE */}
                             <span className="block font-semibold text-slate-700">
                               {formatTo12Hour(slot.startTime)} - {formatTo12Hour(slot.endTime)}
                             </span>

@@ -104,17 +104,45 @@ const serviceSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchMyServices.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchMyServices.fulfilled, (state, action) => {
         state.loading = false;
         state.services = action.payload;
+      })
+      .addCase(fetchMyServices.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(createService.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
       .addCase(createService.fulfilled, (state, action) => {
         state.loading = false;
         state.services.push(action.payload);
       })
+      .addCase(createService.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchAllServices.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchAllServices.fulfilled, (state, action) => {
         state.loading = false;
         state.services = action.payload;
+      })
+      .addCase(fetchAllServices.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(deleteService.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
       .addCase(deleteService.fulfilled, (state, action) => {
         state.loading = false;
@@ -122,17 +150,27 @@ const serviceSlice = createSlice({
           (service) => service._id !== action.payload
         );
       })
+      .addCase(deleteService.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(updateService.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(updateService.fulfilled, (state, action) => {
         state.loading = false;
-
         const index = state.services.findIndex(
           (service) => service._id === action.payload._id
         );
-
         if (index !== -1) {
           state.services[index] = action.payload;
         }
       })
+      .addCase(updateService.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 

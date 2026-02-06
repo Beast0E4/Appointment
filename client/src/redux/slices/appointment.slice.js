@@ -44,7 +44,7 @@ export const bookAppointment = createAsyncThunk(
       const response = await axiosInstance.post('/appointments', appointmentData, getAuthHeaders ());
       return response.data;
     } catch (error) {
-      toast.error (error.response?.data?.error || "Failed to bok appointment")
+      toast.error (error.response?.data?.error || "Failed to book appointment")
       return rejectWithValue(error.response?.data?.message || 'Failed to book appointment');
     }
   }
@@ -130,26 +130,64 @@ const appointmentSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-    .addCase(fetchAvailableSlots.pending, (state, action) => {
+      .addCase(fetchAvailableSlots.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchAvailableSlots.fulfilled, (state, action) => {
         state.loading = false;
         state.availableSlots = action.payload;
       })
+      .addCase(fetchAvailableSlots.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(bookAppointment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(bookAppointment.fulfilled, (state, action) => {
         state.loading = false;
         state.appointments.push(action.payload);
+      })
+      .addCase(bookAppointment.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(fetchMyAppointments.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
       .addCase(fetchMyAppointments.fulfilled, (state, action) => {
         state.loading = false;
         state.appointments = action.payload;
       })
+      .addCase(fetchMyAppointments.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(fetchProviderBookings.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchProviderBookings.fulfilled, (state, action) => {
         state.loading = false;
         state.providerBookings = action.payload;
       })
+      .addCase(fetchProviderBookings.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(updateAppointmentStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(updateAppointmentStatus.fulfilled, (state, action) => {
+        state.loading = false;
         const index = state.providerBookings.findIndex(
           (apt) => apt._id === action.payload._id
         );
@@ -157,7 +195,41 @@ const appointmentSlice = createSlice({
           state.providerBookings[index] = action.payload;
         }
       })
+      .addCase(updateAppointmentStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(cancelAppointment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(cancelAppointment.fulfilled, (state, action) => {
+        state.loading = false;
+        const userIndex = state.appointments.findIndex(
+          (apt) => apt._id === action.payload._id
+        );
+        if (userIndex !== -1) {
+          state.appointments[userIndex] = action.payload;
+        }
+        const providerIndex = state.providerBookings.findIndex(
+            (apt) => apt._id === action.payload._id
+        );
+        if (providerIndex !== -1) {
+            state.providerBookings[providerIndex] = action.payload;
+        }
+      })
+      .addCase(cancelAppointment.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(rescheduleAppointment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(rescheduleAppointment.fulfilled, (state, action) => {
+        state.loading = false;
         const index = state.appointments.findIndex(
           (apt) => apt._id === action.payload._id
         );
@@ -165,13 +237,9 @@ const appointmentSlice = createSlice({
           state.appointments[index] = action.payload;
         }
       })
-      .addCase(rescheduleAppointment.fulfilled, (state, action) => {
-        const index = state.appointments.findIndex(
-          (apt) => apt._id === action.payload._id
-        );
-        if (index !== -1) {
-          state.appointments[index] = action.payload;
-        }
+      .addCase(rescheduleAppointment.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

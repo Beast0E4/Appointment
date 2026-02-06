@@ -16,4 +16,9 @@ const availabilitySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+availabilitySchema.index(
+  { serviceId: 1, dayOfWeek: 1, startTime: 1, endTime: 1 },
+  { unique: true }
+);
+
 module.exports = mongoose.model("Availability", availabilitySchema);

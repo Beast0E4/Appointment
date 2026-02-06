@@ -15,4 +15,9 @@ const serviceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+serviceSchema.index(
+  { providerId: 1, name: 1 },
+  { unique: true }
+);
+
 module.exports = mongoose.model("Service", serviceSchema);

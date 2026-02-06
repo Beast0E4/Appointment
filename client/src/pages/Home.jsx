@@ -182,8 +182,8 @@ function Home() {
       {/* Footer Simple */}
       <footer className="bg-white border-t border-slate-200 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
-           <div className="text-slate-900 font-bold text-xl mb-4 md:mb-0">BookEase.</div>
-           <p className="text-slate-500 text-sm">© {new Date().getFullYear()} BookEase Inc. All rights reserved.</p>
+           <div className="text-slate-900 font-bold text-xl mb-4 md:mb-0">BookEaxy.</div>
+           <p className="text-slate-500 text-sm">© {new Date().getFullYear()} BookEaxy Inc. All rights reserved.</p>
         </div>
       </footer>
     </div>
