@@ -111,21 +111,27 @@ const deleteService = async (userId, serviceId) => {
       return response;
     }
 
-    const deletedService = await Service.findOneAndDelete({
-      _id: serviceId,
-      providerId: userId,
-    });
-
-    if (!deletedService) {
+    const service = await Service.findOne({ _id: serviceId, providerId: userId });
+    if (!service) {
       response.error = "Service not found or unauthorized";
       return response;
     }
 
+    const activeAppointments = await Appointment.findOne({
+      serviceId: serviceId,
+      status: { $in: ["PENDING", "CONFIRMED"] }
+    });
+
+    if (activeAppointments) {
+      response.error = "Cannot delete service: You have active (pending or confirmed) appointments. Please cancel or complete them first.";
+      return response;
+    }
+
+    await Service.findByIdAndDelete(serviceId);
+
     await Availability.deleteMany({ serviceId: serviceId });
 
-    await Appointment.deleteMany({ serviceId: serviceId });
-
-    response.message = "Service and all associated availability and appointments permanently deleted";
+    response.message = "Service and availability slots deleted successfully";
     return response;
 
   } catch (error) {

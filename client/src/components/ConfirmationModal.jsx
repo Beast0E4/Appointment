@@ -63,7 +63,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, isLoadi
             <button
               type="button"
               className="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-all"
-              onClick={onConfirm}
+              onClick={onClose}
             >
               {cancelText}
             </button>
