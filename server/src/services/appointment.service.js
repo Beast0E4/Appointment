@@ -79,11 +79,21 @@ const bookAppointment = async (userId, data) => {
 
     const dateObj = new Date(dateTime);
 
-    const date = dateObj.toISOString().split("T")[0];
-    const startTime = dateObj.toTimeString().slice(0, 5);
+    const pad = (n) => String(n).padStart(2, "0");
+
+    const year = dateObj.getFullYear();
+    const month = pad(dateObj.getMonth() + 1);
+    const day = pad(dateObj.getDate());
+    const date = `${year}-${month}-${day}`;
+
+    const hours = pad(dateObj.getHours());
+    const minutes = pad(dateObj.getMinutes());
+    const startTime = `${hours}:${minutes}`;
 
     const endDate = new Date(dateObj.getTime() + service.duration * 60000);
-    const endTime = endDate.toTimeString().slice(0, 5);
+    const endHours = pad(endDate.getHours());
+    const endMinutes = pad(endDate.getMinutes());
+    const endTime = `${endHours}:${endMinutes}`;
 
     const conflict = await Appointment.findOne({
       providerId,
@@ -127,6 +137,7 @@ const bookAppointment = async (userId, data) => {
     return response;
   }
 };
+
 
 const updateAppointmentStatus = async (userId, appointmentId, status) => {
   const response = {};
